@@ -21,6 +21,18 @@
         p {
             margin: 5px 0;
         }
+        #answers {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e8f0fe;
+            border-left: 5px solid #2196F3;
+        }
+        #controls {
+            margin: 20px 0;
+            padding: 10px;
+            background-color: #f1f1f1;
+            border-radius: 5px;
+        }
     </style>
 </head>
 <body>
@@ -38,6 +50,19 @@
     </div>
 
     <canvas id="canvas" width="800" height="600"></canvas>
+
+    <div id="answers">
+        <h2>Answers to Theoretical Questions</h2>
+        <p><strong>1. Basic notions in Statistics:</strong></p>
+        <p>- A population in statistics refers to the complete set of items or individuals under consideration in a statistical analysis.</p>
+        <p>- Statistical units are the individual items or subjects that make up a population, such as people, organizations, or events. They are crucial because they provide the basis for data collection and analysis.</p>
+        <p>- A distribution describes how values of a variable are spread or distributed across possible values. It provides insight into the probability of different outcomes in a statistical experiment.</p>
+
+        <p><strong>2. Notion of average:</strong></p>
+        <p>- The different types of averages include the mean (arithmetic average), median (middle value), and mode (most frequent value).</p>
+        <p>- Computational problems with floating-point representation can include round-off errors, where small discrepancies accumulate, leading to significant errors in calculations, and catastrophic cancellation, which occurs when subtracting two nearly equal numbers, leading to a loss of precision.</p>
+        <p>- Knuth's method for numerical solutions addresses these issues by emphasizing the use of stable algorithms and careful consideration of the order of operations to minimize rounding errors.</p>
+    </div>
 
     <div id="theory-questions">
         <h2>Theoretical Questions</h2>
@@ -99,7 +124,6 @@
             const width = canvas.width;
             const height = canvas.height;
             const serverWidth = width * 3 / 4 / n;
-            const attackerHeight = height / m;
 
             // Clear the canvas and fill background
             ctx.clearRect(0, 0, width, height);
