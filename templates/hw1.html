@@ -66,12 +66,33 @@
         li {
             margin-bottom: 5px;
         }
+
+        /* Stile per il contenitore del titolo del grafico */
+        .graph-title {
+            background-color: #4A90E2; /* Colore di sfondo */
+            color: white; /* Colore del testo */
+            padding: 10px; /* Spaziatura interna */
+            text-align: center; /* Centra il testo */
+            border-radius: 5px; /* Angoli arrotondati */
+            margin-bottom: 10px; /* Margine inferiore per distanziare dal grafico */
+            font-size: 24px; /* Dimensione del font */
+            font-weight: bold; /* Grassetto */
+        }
     </style>
 </head>
 
 <body>
-    <h1>Computational Problems with Floating Point Representation</h1>
-    <p>Floating point representation is a way to represent real numbers in computers, allowing for a wide range of values by using a format that includes a fraction (the significand or mantissa) and an exponent. However, this representation can lead to several computational problems, especially when dealing with very large or very small numbers. Below are some key issues associated with floating point representation:</p>
+    <h1>Server Penetration Simulation</h1>
+    <h2>Basic Notions in Statistics</h2>
+    <h2>1. Population</h2>
+    <p>In statistics, a <strong>population</strong> refers to the entire set of individuals or items that are of interest in a particular study. For example, if a researcher is studying the average height of adult males in a city, the population would include all adult males in that city.</p>
+    <h2>2. Statistical Units</h2>
+    <p>A <strong>statistical unit</strong> is an individual member of a population. It can be a person, object, event, or any other entity that is being measured. In the previous example, each adult male in the city would be considered a statistical unit.</p>
+
+    <h2>3. Distribution</h2>
+    <p><strong>Distribution</strong> refers to the way in which the values of a variable are spread or distributed across different values. This can be visualized using frequency distributions or probability distributions, which help in understanding the characteristics of the data. For example, the height of adult males might be normally distributed, indicating that most individuals fall near the average height.</p>
+
+    <p>Floating point representation is a way to represent real numbers in computers, allowing for a wide range of values by using a format that includes a fraction (the significand or mantissa) and an exponent. Tuttavia, questa rappresentazione può portare a diversi problemi computazionali, specialmente quando si trattano numeri molto grandi o molto piccoli. Di seguito sono riportati alcuni problemi chiave associati alla rappresentazione in virgola mobile:</p>
 
     <h2>1. Precision Limitations</h2>
     <p>Floating point numbers have a limited precision due to their finite representation. This means that not all real numbers can be accurately represented. For example, numbers like <code>0.1</code> or <code>0.2</code> cannot be represented precisely in binary floating-point format. As a result, small rounding errors can accumulate in calculations.</p>
@@ -122,18 +143,11 @@
     <ul>
         <li><strong>Use Higher Precision:</strong> Utilize data types that offer greater precision, such as double precision (64 bits) instead of single precision (32 bits) when necessary.</li>
         <li><strong>Numerical Methods:</strong> Employ numerical algorithms that are designed to minimize error propagation and improve stability. For instance, using Kahan summation can help reduce rounding errors in summation.</li>
-        <li><strong>Avoid Catastrophic Cancellation:</strong> Rearrange calculations to minimize the subtraction of nearly equal numbers. If subtraction is unavoidable, consider using alternative formulations that are less sensitive to this problem.</li>
-        <li><strong>Error Analysis:</strong> Conduct sensitivity analysis on algorithms to understand how floating point errors affect the final results. This can help in selecting appropriate algorithms based on their stability.</li>
+        <li><strong>Avoid Catastrophic Cancellation:</strong> Reformulate expressions to reduce the likelihood of subtracting nearly equal numbers. For example, rewriting <code>a - b</code> as <code>(a - b) * (a + b)/(a + b)</code> can help maintain precision.</li>
+        <li><strong>Regularly Validate Results:</strong> Incorporate checks to validate the results of floating point calculations against expected outcomes, especially in critical applications.</li>
     </ul>
 
-    <h3>Numerical Solutions and Knuth's Approach</h3>
-    <p>
-        Donald Knuth emphasizes the importance of using robust numerical methods to mitigate these computational problems. Techniques such as:
-    </p>
-    <ul>
-        <li><strong>Arbitrary Precision Arithmetic:</strong> This allows calculations to maintain a higher level of accuracy beyond standard floating-point limitations.</li>
-        <li><strong>Numerical Algorithms:</strong> Careful selection of algorithms that minimize error propagation and maximize precision are crucial for obtaining reliable results.</li>
-    </ul>
+    <div class="graph-title">Server Penetration Simulation</div>
 
     <div id="controls">
         <label for="servers">Number of Servers (n): </label>
@@ -147,6 +161,7 @@
     </div>
 
     <canvas id="canvas" width="800" height="600"></canvas>
+
 
     <script>
         const canvas = document.getElementById('canvas');
@@ -219,7 +234,7 @@
 
             // Draw each attacker's path
             for (let i = 0; i < m; i++) {
-                const randomColor = `rgb(${Math.random() * 255}, ${Math.random() * 255}, ${Math.random() * 255})`;
+                const randomColor = `rgb(${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)})`;
                 ctx.strokeStyle = randomColor;
 
                 let x = 0;
@@ -253,7 +268,7 @@
             let prevX = endLine;
             let prevY = height;
             for (let i = 0; i <= n; i++) {
-                const y = height - i * (height / (n + 1));
+                const y = height - (i * (height / (n + 1)));
                 const x = endLine + (smoothedCounts[i] / maxCount) * (waveWidth - 40);
                 ctx.beginPath();
                 ctx.moveTo(prevX, prevY);
@@ -292,4 +307,8 @@
         });
     </script>
 </body>
+
+<div class="graph-title">Code explanation</div>
+
+
 </html>
