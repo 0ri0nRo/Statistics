@@ -1,104 +1,139 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Server Penetration Simulation</title>
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
+    <title>Computational Problems with Floating Point Representation</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            background-color: #f0f0f0;
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
             margin: 20px;
-        }
-        #theory-questions {
-            margin-top: 20px;
-            border: 1px solid #ccc;
-            padding: 15px;
-            background-color: #ffffff;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-            text-align: left; /* Left-aligned text */
-        }
-        h2 {
+            background-color: #f9f9f9;
             color: #333;
+        }
+
+        h1 {
+            color: #0056b3;
+            border-bottom: 2px solid #0056b3;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        h2 {
+            color: #003366;
+            margin-top: 20px;
             margin-bottom: 10px;
         }
+
+        h3 {
+            color: #003366;
+            margin-top: 15px;
+        }
+
         p {
             margin: 10px 0;
-            line-height: 1.5;
+            text-align: justify;
         }
-        .math {
-            font-family: 'Courier New', Courier, monospace;
+
+        code {
+            background-color: #e0e0e0;
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+
+        .example {
             background-color: #e8f0fe;
-            padding: 5px;
-            border: 1px solid #2196F3;
-            display: inline-block;
-            white-space: nowrap; /* Prevent line breaks in math */
-        }
-        #controls {
-            margin: 20px 0;
             padding: 10px;
-            background-color: #f1f1f1;
+            border-left: 5px solid #2196F3;
+            margin: 10px 0;
             border-radius: 5px;
         }
-        canvas {
-            border: 1px solid #ccc;
-            background-color: white;
+
+        pre {
+            background-color: #e0e0e0;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        ul {
+            margin: 10px 0 10px 20px;
+        }
+
+        li {
+            margin-bottom: 5px;
         }
     </style>
 </head>
+
 <body>
-    <h1>Server Penetration Simulation</h1>
+    <h1>Computational Problems with Floating Point Representation</h1>
+    <p>Floating point representation is a way to represent real numbers in computers, allowing for a wide range of values by using a format that includes a fraction (the significand or mantissa) and an exponent. However, this representation can lead to several computational problems, especially when dealing with very large or very small numbers. Below are some key issues associated with floating point representation:</p>
 
-    <div id="theory-questions">
-        <h2>1. Basic Notions in Statistics</h2>
-        <p>
-            In statistics, fundamental concepts provide the basis for analyzing data effectively:
-        </p>
-        <h3>Population</h3>
-        <p>
-            A <strong>population</strong> refers to the entire set of items or individuals that we wish to study. It can be finite (e.g., all students in a school) or infinite (e.g., all possible outcomes of a random process).
-        </p>
-
-        <h3>Statistical Units</h3>
-        <p>
-            Each item within a population is termed a <strong>statistical unit</strong>. These units can vary based on the context of the study; for example, in a survey measuring household income, each household acts as a statistical unit.
-        </p>
-
-        <h3>Distribution</h3>
-        <p>
-            The <strong>distribution</strong> of a variable describes how values are spread across the population. Common types of distributions include normal, binomial, and uniform distributions. Graphical representations, such as histograms, help illustrate the frequency of different values within the data.
-        </p>
-
-        <h2>2. Notion of Average</h2>
-        <p>
-            The <strong>average</strong> (or mean) is a central measure used to summarize a set of data. It is calculated as follows:
-        </p>
-        <p class="math">
-            Mean (μ) = &Sigma;<sub>i=1</sub><sup>n</sup> x<sub>i</sub> / n
-        </p>
-        <p>
-            where <em>μ</em> is the mean, <em>x<sub>i</sub></em> represents each value in the dataset, and <em>n</em> is the total number of values.
-        </p>
-
-        <h3>Computational Problems with Floating Point Representation</h3>
-        <p>
-            When performing calculations with floating-point numbers, certain issues can arise:
-        </p>
-        <ul>
-            <li><strong>Rounding Errors:</strong> Inexact representation of decimal numbers can lead to small discrepancies.</li>
-            <li><strong>Catastrophic Cancellation:</strong> This occurs when subtracting two nearly equal numbers, resulting in a significant loss of precision. For instance, in the calculation of <em>a = 1.0001</em> and <em>b = 1.0000</em>, the result <em>a - b</em> is <em>0.0001</em>, but if both values are rounded, the result can be inaccurately represented.</li>
-        </ul>
-        
-        <h3>Numerical Solutions and Knuth's Approach</h3>
-        <p>
-            Donald Knuth emphasizes the importance of using robust numerical methods to mitigate these computational problems. Techniques such as:
-        </p>
-        <ul>
-            <li><strong>Arbitrary Precision Arithmetic:</strong> This allows calculations to maintain a higher level of accuracy beyond standard floating-point limitations.</li>
-            <li><strong>Numerical Algorithms:</strong> Careful selection of algorithms that minimize error propagation and maximize precision are crucial for obtaining reliable results.</li>
-        </ul>
+    <h2>1. Precision Limitations</h2>
+    <p>Floating point numbers have a limited precision due to their finite representation. This means that not all real numbers can be accurately represented. For example, numbers like <code>0.1</code> or <code>0.2</code> cannot be represented precisely in binary floating-point format. As a result, small rounding errors can accumulate in calculations.</p>
+    <div class="example">
+        <strong>Example:</strong>
+        <p>The decimal number <code>0.1</code> is represented in binary floating point as approximately <code>0.1000000000000000055511151231257827021181583404541015625</code>, which is slightly greater than <code>0.1</code>. This discrepancy can cause issues in numerical computations.</p>
     </div>
+
+    <h2>2. Rounding Errors</h2>
+    <p>When performing arithmetic operations on floating point numbers, rounding errors can occur due to the limited number of bits used for representation. These errors can lead to unexpected results, especially in iterative calculations or algorithms that require high precision.</p>
+    <div class="example">
+        <strong>Example:</strong>
+        <p>Consider the operation <code>x = 1.0 - 0.9</code>. In an ideal world, this would yield <code>x = 0.1</code>. However, due to floating point representation, the result may be slightly less than <code>0.1</code>, resulting in <code>x &approx; 0.09999999999999998</code>.</p>
+    </div>
+
+    <h2>3. Catastrophic Cancellation</h2>
+    <p>Catastrophic cancellation occurs when subtracting two nearly equal floating point numbers, leading to a significant loss of precision. This can severely impact the results of computations, especially in algorithms sensitive to small changes in input.</p>
+    <div class="example">
+        <strong>Example:</strong>
+        <p>If we have two numbers:</p>
+        <pre>
+            a = 1.0000001
+            b = 1.0000000
+        </pre>
+        <p>The calculation <code>c = a - b</code> ideally should give <code>c = 0.0000001</code>. However, if both numbers are rounded in the floating point representation, <code>c</code> may end up being <code>0</code> or a value very close to <code>0</code>, resulting in a significant loss of information.</p>
+    </div>
+
+    <h2>4. Overflow and Underflow</h2>
+    <h3>Overflow</h3>
+    <p>This occurs when a calculation produces a number larger than the maximum representable floating point number. In such cases, the result is often represented as infinity.</p>
+    <div class="example">
+        <strong>Example:</strong>
+        <p>If <code>x = 1.0e308</code> (a very large number) and we perform <code>y = x * 10</code>, <code>y</code> may be represented as infinity.</p>
+    </div>
+
+    <h3>Underflow</h3>
+    <p>This occurs when a calculation produces a number closer to zero than the smallest representable floating point number. Such numbers are often rounded to zero.</p>
+    <div class="example">
+        <strong>Example:</strong>
+        <p>If we compute <code>y = 1.0e-323 / 10</code>, <code>y</code> may be rounded to zero due to underflow.</p>
+    </div>
+
+    <h2>5. Numerical Instability</h2>
+    <p>Some algorithms are numerically unstable, meaning that small changes in input can lead to large changes in output. This can be exacerbated by the limitations of floating point representation. Such instability is particularly common in algorithms that involve subtraction of similar numbers, division by small numbers, or iterative processes.</p>
+
+    <h2>Addressing Floating Point Issues</h2>
+    <p>To mitigate the problems associated with floating point representation, consider the following strategies:</p>
+    <ul>
+        <li><strong>Use Higher Precision:</strong> Utilize data types that offer greater precision, such as double precision (64 bits) instead of single precision (32 bits) when necessary.</li>
+        <li><strong>Numerical Methods:</strong> Employ numerical algorithms that are designed to minimize error propagation and improve stability. For instance, using Kahan summation can help reduce rounding errors in summation.</li>
+        <li><strong>Avoid Catastrophic Cancellation:</strong> Rearrange calculations to minimize the subtraction of nearly equal numbers. If subtraction is unavoidable, consider using alternative formulations that are less sensitive to this problem.</li>
+        <li><strong>Error Analysis:</strong> Conduct sensitivity analysis on algorithms to understand how floating point errors affect the final results. This can help in selecting appropriate algorithms based on their stability.</li>
+    </ul>
+
+    <h3>Numerical Solutions and Knuth's Approach</h3>
+    <p>
+        Donald Knuth emphasizes the importance of using robust numerical methods to mitigate these computational problems. Techniques such as:
+    </p>
+    <ul>
+        <li><strong>Arbitrary Precision Arithmetic:</strong> This allows calculations to maintain a higher level of accuracy beyond standard floating-point limitations.</li>
+        <li><strong>Numerical Algorithms:</strong> Careful selection of algorithms that minimize error propagation and maximize precision are crucial for obtaining reliable results.</li>
+    </ul>
 
     <div id="controls">
         <label for="servers">Number of Servers (n): </label>
