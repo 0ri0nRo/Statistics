@@ -5,6 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Server Penetration Simulation</title>
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        #theory-questions {
+            margin-top: 20px;
+            border: 1px solid #ccc;
+            padding: 15px;
+            background-color: #f9f9f9;
+        }
+        h2 {
+            color: #333;
+        }
+        p {
+            margin: 5px 0;
+        }
+    </style>
 </head>
 <body>
     <h1>Server Penetration Simulation</h1>
@@ -21,6 +38,19 @@
     </div>
 
     <canvas id="canvas" width="800" height="600"></canvas>
+
+    <div id="theory-questions">
+        <h2>Theoretical Questions</h2>
+        <p><strong>1. Basic notions in Statistics:</strong></p>
+        <p>- What is a population in statistics?</p>
+        <p>- Define statistical units and their importance.</p>
+        <p>- Explain what is meant by a distribution in a statistical context.</p>
+
+        <p><strong>2. Notion of average:</strong></p>
+        <p>- What are the different types of averages?</p>
+        <p>- Discuss computational problems with floating-point representation, including errors and catastrophic cancellation.</p>
+        <p>- What is Knuth's method for numerical solutions, and how does it address these issues?</p>
+    </div>
 
     <script>
         const canvas = document.getElementById('canvas');
