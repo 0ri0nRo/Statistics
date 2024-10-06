@@ -8,24 +8,32 @@
     <style>
         body {
             font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 20px;
         }
         #theory-questions {
             margin-top: 20px;
             border: 1px solid #ccc;
             padding: 15px;
-            background-color: #f9f9f9;
+            background-color: #ffffff;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            text-align: left; /* Left-aligned text */
         }
         h2 {
             color: #333;
+            margin-bottom: 10px;
         }
         p {
-            margin: 5px 0;
+            margin: 10px 0;
+            line-height: 1.5;
         }
-        #answers {
-            margin-top: 20px;
-            padding: 15px;
+        .math {
+            font-family: 'Courier New', Courier, monospace;
             background-color: #e8f0fe;
-            border-left: 5px solid #2196F3;
+            padding: 5px;
+            border: 1px solid #2196F3;
+            display: inline-block;
+            white-space: nowrap; /* Prevent line breaks in math */
         }
         #controls {
             margin: 20px 0;
@@ -33,10 +41,64 @@
             background-color: #f1f1f1;
             border-radius: 5px;
         }
+        canvas {
+            border: 1px solid #ccc;
+            background-color: white;
+        }
     </style>
 </head>
 <body>
     <h1>Server Penetration Simulation</h1>
+
+    <div id="theory-questions">
+        <h2>1. Basic Notions in Statistics</h2>
+        <p>
+            In statistics, fundamental concepts provide the basis for analyzing data effectively:
+        </p>
+        <h3>Population</h3>
+        <p>
+            A <strong>population</strong> refers to the entire set of items or individuals that we wish to study. It can be finite (e.g., all students in a school) or infinite (e.g., all possible outcomes of a random process).
+        </p>
+
+        <h3>Statistical Units</h3>
+        <p>
+            Each item within a population is termed a <strong>statistical unit</strong>. These units can vary based on the context of the study; for example, in a survey measuring household income, each household acts as a statistical unit.
+        </p>
+
+        <h3>Distribution</h3>
+        <p>
+            The <strong>distribution</strong> of a variable describes how values are spread across the population. Common types of distributions include normal, binomial, and uniform distributions. Graphical representations, such as histograms, help illustrate the frequency of different values within the data.
+        </p>
+
+        <h2>2. Notion of Average</h2>
+        <p>
+            The <strong>average</strong> (or mean) is a central measure used to summarize a set of data. It is calculated as follows:
+        </p>
+        <p class="math">
+            Mean (μ) = &Sigma;<sub>i=1</sub><sup>n</sup> x<sub>i</sub> / n
+        </p>
+        <p>
+            where <em>μ</em> is the mean, <em>x<sub>i</sub></em> represents each value in the dataset, and <em>n</em> is the total number of values.
+        </p>
+
+        <h3>Computational Problems with Floating Point Representation</h3>
+        <p>
+            When performing calculations with floating-point numbers, certain issues can arise:
+        </p>
+        <ul>
+            <li><strong>Rounding Errors:</strong> Inexact representation of decimal numbers can lead to small discrepancies.</li>
+            <li><strong>Catastrophic Cancellation:</strong> This occurs when subtracting two nearly equal numbers, resulting in a significant loss of precision. For instance, in the calculation of <em>a = 1.0001</em> and <em>b = 1.0000</em>, the result <em>a - b</em> is <em>0.0001</em>, but if both values are rounded, the result can be inaccurately represented.</li>
+        </ul>
+        
+        <h3>Numerical Solutions and Knuth's Approach</h3>
+        <p>
+            Donald Knuth emphasizes the importance of using robust numerical methods to mitigate these computational problems. Techniques such as:
+        </p>
+        <ul>
+            <li><strong>Arbitrary Precision Arithmetic:</strong> This allows calculations to maintain a higher level of accuracy beyond standard floating-point limitations.</li>
+            <li><strong>Numerical Algorithms:</strong> Careful selection of algorithms that minimize error propagation and maximize precision are crucial for obtaining reliable results.</li>
+        </ul>
+    </div>
 
     <div id="controls">
         <label for="servers">Number of Servers (n): </label>
@@ -46,66 +108,10 @@
         <label for="probability">Penetration Probability (p): </label>
         <input type="number" id="probability" value="0.7" min="0" max="1" step="0.01">
         <button id="simulate">Run Simulation</button>
-        <button id="downloadBtn">Download Image</button>
+        <button id="downloadBtn" style="display: none;">Download Image</button>
     </div>
 
     <canvas id="canvas" width="800" height="600"></canvas>
-
-    <div id="answers">
-        <h2>What is Statistics and Its Relationship with Other Disciplines</h2>
-        <p>Statistics is the science of collecting, analyzing, interpreting, presenting, and organizing data. It plays a crucial role in various disciplines, including:</p>
-        <ul>
-            <li><strong>Economics:</strong> Analyzing economic trends and forecasting.</li>
-            <li><strong>Psychology:</strong> Designing experiments and interpreting behavioral data.</li>
-            <li><strong>Medicine:</strong> Conducting clinical trials and epidemiological studies.</li>
-            <li><strong>Sociology:</strong> Understanding social phenomena through surveys.</li>
-        </ul>
-
-        <h3>Descriptive vs. Inferential Statistics:</h3>
-        <p><strong>Descriptive Statistics:</strong> Summarizes and describes the characteristics of a dataset (e.g., mean, median, mode).</p>
-        <p><strong>Inferential Statistics:</strong> Makes predictions or inferences about a population based on a sample (e.g., hypothesis testing, confidence intervals).</p>
-
-        <h3>Key Concepts</h3>
-        <ul>
-            <li><strong>Population:</strong> The entire group of individuals or instances about whom we seek information.</li>
-            <li><strong>Sample:</strong> A subset of the population used to represent the larger group.</li>
-            <li><strong>Attribute:</strong> A characteristic or property of an individual in the dataset (e.g., age, gender).</li>
-            <li><strong>Variable:</strong> A measurable trait that can take different values (e.g., height, weight).</li>
-            <li><strong>Level of Measurement:</strong> Refers to the nature of data and how it can be categorized (nominal, ordinal, interval, ratio).</li>
-            <li><strong>Dataset:</strong> A collection of data points or values typically organized in a structured format (e.g., tables).</li>
-        </ul>
-
-        <h3>Main Sampling Methods</h3>
-        <ul>
-            <li><strong>Simple Random Sampling:</strong> Every member of the population has an equal chance of being selected.</li>
-            <li><strong>Systematic Sampling:</strong> Selection is made using a fixed interval (e.g., every 10th individual).</li>
-            <li><strong>Stratified Sampling:</strong> The population is divided into subgroups (strata), and random samples are drawn from each.</li>
-            <li><strong>Cluster Sampling:</strong> The population is divided into clusters, and entire clusters are randomly selected.</li>
-            <li><strong>Convenience Sampling:</strong> Sampling is done based on ease of access rather than randomness.</li>
-        </ul>
-
-        <h3>Main Experimental Designs</h3>
-        <ul>
-            <li><strong>Randomized Controlled Trials (RCTs):</strong> Participants are randomly assigned to treatment or control groups, minimizing bias.</li>
-            <li><strong>Cross-Over Design:</strong> Participants receive multiple treatments in a sequential manner, allowing comparison within the same individuals.</li>
-            <li><strong>Factorial Design:</strong> Examines the effects of multiple factors by varying them simultaneously to see interactions.</li>
-            <li><strong>Quasi-Experimental Design:</strong> Lacks random assignment, often used in real-world settings where control is limited.</li>
-            <li><strong>Observational Studies:</strong> Researchers observe subjects in a natural setting without manipulation, focusing on correlation rather than causation.</li>
-        </ul>
-    </div>
-
-    <div id="theory-questions">
-        <h2>Theoretical Questions</h2>
-        <p><strong>1. Basic notions in Statistics:</strong></p>
-        <p>- What is a population in statistics?</p>
-        <p>- Define statistical units and their importance.</p>
-        <p>- Explain what is meant by a distribution in a statistical context.</p>
-
-        <p><strong>2. Notion of average:</strong></p>
-        <p>- What are the different types of averages?</p>
-        <p>- Discuss computational problems with floating-point representation, including errors and catastrophic cancellation.</p>
-        <p>- What is Knuth's method for numerical solutions, and how does it address these issues?</p>
-    </div>
 
     <script>
         const canvas = document.getElementById('canvas');
