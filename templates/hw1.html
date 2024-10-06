@@ -92,23 +92,23 @@
     <h2>3. Distribution</h2>
     <p><strong>Distribution</strong> refers to the way in which the values of a variable are spread or distributed across different values. This can be visualized using frequency distributions or probability distributions, which help in understanding the characteristics of the data. For example, the height of adult males might be normally distributed, indicating that most individuals fall near the average height.</p>
 
-    <p>Floating point representation is a way to represent real numbers in computers, allowing for a wide range of values by using a format that includes a fraction (the significand or mantissa) and an exponent. Tuttavia, questa rappresentazione può portare a diversi problemi computazionali, specialmente quando si trattano numeri molto grandi o molto piccoli. Di seguito sono riportati alcuni problemi chiave associati alla rappresentazione in virgola mobile:</p>
+    <p>Floating point representation is a way to represent real numbers in computers, allowing for a wide range of values by using a format that includes a fraction (the significand or mantissa) and an exponent. However, this representation can lead to several computational problems, especially when dealing with very large or very small numbers. The following are some key issues associated with floating-point representation:</p>
 
-    <h2>1. Precision Limitations</h2>
+    <h3>3.1 Precision Limitations</h3>
     <p>Floating point numbers have a limited precision due to their finite representation. This means that not all real numbers can be accurately represented. For example, numbers like <code>0.1</code> or <code>0.2</code> cannot be represented precisely in binary floating-point format. As a result, small rounding errors can accumulate in calculations.</p>
     <div class="example">
         <strong>Example:</strong>
         <p>The decimal number <code>0.1</code> is represented in binary floating point as approximately <code>0.1000000000000000055511151231257827021181583404541015625</code>, which is slightly greater than <code>0.1</code>. This discrepancy can cause issues in numerical computations.</p>
     </div>
 
-    <h2>2. Rounding Errors</h2>
+    <h3>3.2 Rounding Errors</h3>
     <p>When performing arithmetic operations on floating point numbers, rounding errors can occur due to the limited number of bits used for representation. These errors can lead to unexpected results, especially in iterative calculations or algorithms that require high precision.</p>
     <div class="example">
         <strong>Example:</strong>
         <p>Consider the operation <code>x = 1.0 - 0.9</code>. In an ideal world, this would yield <code>x = 0.1</code>. However, due to floating point representation, the result may be slightly less than <code>0.1</code>, resulting in <code>x &approx; 0.09999999999999998</code>.</p>
     </div>
 
-    <h2>3. Catastrophic Cancellation</h2>
+    <h3>3.3 Catastrophic Cancellation</h3>
     <p>Catastrophic cancellation occurs when subtracting two nearly equal floating point numbers, leading to a significant loss of precision. This can severely impact the results of computations, especially in algorithms sensitive to small changes in input.</p>
     <div class="example">
         <strong>Example:</strong>
