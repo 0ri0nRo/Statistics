@@ -69,20 +69,20 @@
 
         /* Stile per il contenitore del titolo del grafico */
         .graph-title {
-            background-color: #4A90E2; /* Colore di sfondo */
-            color: white; /* Colore del testo */
-            padding: 10px; /* Spaziatura interna */
-            text-align: center; /* Centra il testo */
-            border-radius: 5px; /* Angoli arrotondati */
-            margin-bottom: 10px; /* Margine inferiore per distanziare dal grafico */
-            font-size: 24px; /* Dimensione del font */
-            font-weight: bold; /* Grassetto */
+            background-color: #4A90E2;
+            color: white;
+            padding: 10px;
+            text-align: center;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            font-size: 24px;
+            font-weight: bold;
         }
     </style>
 </head>
 
 <body>
-  
+
 <h2>1. Basic Notions in Statistics</h2>
 
 <h3>1.1 Population</h3>
@@ -163,185 +163,174 @@
     <li><strong>Avoid Catastrophic Cancellation:</strong> Reformulate expressions to reduce the likelihood of subtracting nearly equal numbers. For example, rewriting <code>a - b</code> as <code>(a - b) * (a + b)/(a + b)</code> can help maintain precision.</li>
     <li><strong>Regularly Validate Results:</strong> Incorporate checks to validate the results of floating point calculations against expected outcomes, especially in critical applications.</li>
 </ul>
-<body>
 
-    <h2>Server Penetration Simulation</h2>
+<h2>Server Penetration Simulation</h2>
 
-    <div id="controls">
-        <label for="servers">Number of Servers (n): </label>
-        <input type="number" id="servers" value="50" min="1" max="100" step="1">
-        <label for="attackers">Number of Attackers (m): </label>
-        <input type="number" id="attackers" value="100" min="1" max="200" step="1">
-        <label for="probability">Penetration Probability (p): </label>
-        <input type="number" id="probability" value="0.7" min="0" max="1" step="0.01">
-        <button id="simulate">Run Simulation</button>
-        <button id="downloadBtn" style="display: none;">Download Image</button>
-    </div>
+<div id="controls">
+    <label for="servers">Number of Servers (n): </label>
+    <input type="number" id="servers" value="50" min="1" max="100" step="1">
+    <label for="attackers">Number of Attackers (m): </label>
+    <input type="number" id="attackers" value="100" min="1" max="200" step="1">
+    <label for="probability">Penetration Probability (p): </label>
+    <input type="number" id="probability" value="0.7" min="0" max="1" step="0.01">
+    <button id="simulate">Run Simulation</button>
+    <button id="downloadBtn" style="display: none;">Download Image</button>
+</div>
 
-    <canvas id="canvas" width="800" height="600"></canvas>
+<canvas id="canvas" width="800" height="600"></canvas>
 
+<script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const simulateButton = document.getElementById('simulate');
+    const downloadButton = document.getElementById('downloadBtn');
 
-    <script>
-        const canvas = document.getElementById('canvas');
-        const ctx = canvas.getContext('2d');
-        const simulateButton = document.getElementById('simulate');
-        const downloadButton = document.getElementById('downloadBtn');
+    // Simulate attacks
+    function simulatePenetration(n, m, p) {
+        const penetrations = Array.from({ length: m }, () => Array(n).fill(false));
+        const penetrationLevels = Array(m).fill(0);
+        let meanPenetration = 0; // Initialize mean
 
-        // Recursive function to calculate the sum of penetration levels
-        function recursiveSum(arr, index) {
-            if (index < 0) {
-                return 0;
-            }
-            return arr[index] + recursiveSum(arr, index - 1);
-        }
-
-        // Function to calculate the average using recursion
-        function recursiveAverage(arr) {
-            const total = recursiveSum(arr, arr.length - 1);
-            return total / arr.length;
-        }
-
-        // Simulate attacks
-        function simulatePenetration(n, m, p) {
-            const penetrations = Array.from({ length: m }, () => Array(n).fill(false));
-            const penetrationLevels = Array(m).fill(0);
-            
-            // Simulate attacks
-            for (let i = 0; i < m; i++) {
-                let level = 0;
-                for (let j = 0; j < n; j++) {
-                    penetrations[i][j] = Math.random() < p;
-                    if (penetrations[i][j]) {
-                        level++;
-                    }
+        // Simulate attacks and compute mean using Welford's method
+        for (let i = 0; i < m; i++) {
+            let level = 0;
+            for (let j = 0; j < n; j++) {
+                penetrations[i][j] = Math.random() < p;
+                if (penetrations[i][j]) {
+                    level++;
                 }
-                penetrationLevels[i] = level;
             }
+            penetrationLevels[i] = level;
 
-            // Count penetration levels
-            const levelCounts = Array(n + 1).fill(0);
-            penetrationLevels.forEach(level => {
-                levelCounts[level]++;
-            });
-
-            // Smooth the counts using a moving average
-            const smoothedCounts = Array(n + 1).fill(0);
-            const windowSize = 3;
-            for (let i = 0; i <= n; i++) {
-                const start = Math.max(0, i - Math.floor(windowSize / 2));
-                const end = Math.min(n, i + Math.floor(windowSize / 2));
-                const sum = levelCounts.slice(start, end + 1).reduce((a, b) => a + b, 0);
-                smoothedCounts[i] = sum / (end - start + 1);
-            }
-
-            // Compute the recursive average of penetration levels
-            const avgPenetration = recursiveAverage(penetrationLevels);
-            console.log(`Recursive Average Penetration Level: ${avgPenetration}`);
-
-            return { penetrations, smoothedCounts };
+            // Update meanPenetration using Welford's method
+            meanPenetration = meanPenetration + (level - meanPenetration) / (i + 1);
         }
 
-        // Draw the grid and penetration lines
-        function drawSimulation(penetrations, smoothedCounts, n, m) {
-            const width = canvas.width;
-            const height = canvas.height;
-            const serverWidth = width * 3 / 4 / n;
+        console.log(`Mean Penetration Level (Welford's Method): ${meanPenetration}`);
 
-            // Clear the canvas and fill background
-            ctx.clearRect(0, 0, width, height);
-            ctx.fillStyle = "white";
-            ctx.fillRect(0, 0, width, height);
+        // Count penetration levels
+        const levelCounts = Array(n + 1).fill(0);
+        penetrationLevels.forEach(level => {
+            levelCounts[level]++;
+        });
 
-            // Draw the grid
-            ctx.strokeStyle = "lightgray";
+        // Smooth the counts using a moving average
+        const smoothedCounts = Array(n + 1).fill(0);
+        const windowSize = 3;
+        for (let i = 0; i <= n; i++) {
+            const start = Math.max(0, i - Math.floor(windowSize / 2));
+            const end = Math.min(n, i + Math.floor(windowSize / 2));
+            const sum = levelCounts.slice(start, end + 1).reduce((a, b) => a + b, 0);
+            smoothedCounts[i] = sum / (end - start + 1);
+        }
+
+        return { penetrations, smoothedCounts, meanPenetration };
+    }
+
+    // Draw the grid and penetration lines
+    function drawSimulation(penetrations, smoothedCounts, n, m) {
+        const width = canvas.width;
+        const height = canvas.height;
+        const serverWidth = width * 3 / 4 / n;
+
+        // Clear the canvas and fill background
+        ctx.clearRect(0, 0, width, height);
+        ctx.fillStyle = "white";
+        ctx.fillRect(0, 0, width, height);
+
+        // Draw the grid
+        ctx.strokeStyle = "lightgray";
+        for (let j = 0; j < n; j++) {
+            const newX = (j + 1) * serverWidth;
+            ctx.beginPath();
+            ctx.moveTo(newX, 0);
+            ctx.lineTo(newX, height);
+            ctx.stroke();
+        }
+        for (let y = height - 20; y >= 0; y -= 10) {
+            ctx.beginPath();
+            ctx.moveTo(0, y);
+            ctx.lineTo(width, y);
+            ctx.stroke();
+        }
+
+        // Draw each attacker's path
+        for (let i = 0; i < m; i++) {
+            const randomColor = `rgb(${Math.floor(Math.random() * 200)}, ${Math.floor(Math.random() * 200)}, ${Math.floor(Math.random() * 200)})`;
+            ctx.strokeStyle = randomColor;
+
+            let x = 0;
+            let y = height - 20;
             for (let j = 0; j < n; j++) {
                 const newX = (j + 1) * serverWidth;
+                const newY = y - (penetrations[i][j] ? 10 : 0); // Jump if penetration occurs
                 ctx.beginPath();
-                ctx.moveTo(newX, 0);
-                ctx.lineTo(newX, height);
+                ctx.moveTo(x, y);
+                ctx.lineTo(newX, newY);
                 ctx.stroke();
+                x = newX;
+                y = newY;
             }
-            for (let y = height - 20; y >= 0; y -= 10) {
-                ctx.beginPath();
-                ctx.moveTo(0, y);
-                ctx.lineTo(width, y);
-                ctx.stroke();
-            }
-
-            // Draw each attacker's path
-            for (let i = 0; i < m; i++) {
-                const randomColor = `rgb(${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)})`;
-                ctx.strokeStyle = randomColor;
-
-                let x = 0;
-                let y = height - 20;
-                for (let j = 0; j < n; j++) {
-                    const newX = (j + 1) * serverWidth;
-                    const newY = y - (penetrations[i][j] ? 10 : 0); // Jump if penetration occurs
-                    ctx.beginPath();
-                    ctx.moveTo(x, y);
-                    ctx.lineTo(newX, newY);
-                    ctx.stroke();
-                    x = newX;
-                    y = newY;
-                }
-            }
-
-            // Draw vertical line to separate attackers from distribution wave
-            ctx.strokeStyle = "black";
-            const endLine = (width * 3 / 4) - 50;
-            ctx.beginPath();
-            ctx.moveTo(endLine, 0);
-            ctx.lineTo(endLine, height);
-            ctx.stroke();
-
-            // Draw the distribution wave
-            ctx.strokeStyle = "red";
-            ctx.lineWidth = 2;
-            const waveWidth = width - endLine;
-            const maxCount = Math.max(...smoothedCounts);
-
-            let prevX = endLine;
-            let prevY = height;
-            for (let i = 0; i <= n; i++) {
-                const y = height - (i * (height / (n + 1)));
-                const x = endLine + (smoothedCounts[i] / maxCount) * (waveWidth - 40);
-                ctx.beginPath();
-                ctx.moveTo(prevX, prevY);
-                ctx.lineTo(x, y);
-                ctx.stroke();
-                prevX = x;
-                prevY = y;
-            }
-
-            // Restore line width
-            ctx.lineWidth = 1;
         }
 
-        // Function to run the simulation when the button is clicked
-        simulateButton.addEventListener('click', function() {
-            const n = parseInt(document.getElementById('servers').value);
-            const m = parseInt(document.getElementById('attackers').value);
-            const p = parseFloat(document.getElementById('probability').value);
+        // Draw vertical line to separate attackers from distribution wave
+        ctx.strokeStyle = "black";
+        const endLine = (width * 3 / 4) - 50;
+        ctx.beginPath();
+        ctx.moveTo(endLine, 0);
+        ctx.lineTo(endLine, height);
+        ctx.stroke();
 
-            // Run the simulation
-            const { penetrations, smoothedCounts } = simulatePenetration(n, m, p);
+        // Draw the distribution wave
+        ctx.strokeStyle = "red";
+        ctx.lineWidth = 2;
+        const waveWidth = width - endLine;
+        const maxCount = Math.max(...smoothedCounts);
 
-            // Draw the results
-            drawSimulation(penetrations, smoothedCounts, n, m);
+        let prevX = endLine;
+        let prevY = height;
+        for (let i = 0; i <= n; i++) {
+            const y = height - (i * (height / (n + 1)));
+            const x = endLine + (smoothedCounts[i] / maxCount) * (waveWidth - 40);
+            ctx.beginPath();
+            ctx.moveTo(prevX, prevY);
+            ctx.lineTo(x, y);
+            ctx.stroke();
+            prevX = x;
+            prevY = y;
+        }
 
-            // Show the download button
-            downloadButton.style.display = 'block';
-        });
+        // Restore line width
+        ctx.lineWidth = 1;
+    }
 
-        // Allow users to download the image
-        downloadButton.addEventListener('click', function() {
-            const link = document.createElement('a');
-            link.download = 'penetration_simulation.png';
-            link.href = canvas.toDataURL();
-            link.click();
-        });
-    </script>
+    // Function to run the simulation when the button is clicked
+    simulateButton.addEventListener('click', function() {
+        const n = parseInt(document.getElementById('servers').value);
+        const m = parseInt(document.getElementById('attackers').value);
+        const p = parseFloat(document.getElementById('probability').value);
+
+        // Run the simulation
+        const { penetrations, smoothedCounts, meanPenetration } = simulatePenetration(n, m, p);
+
+        // Draw the results
+        drawSimulation(penetrations, smoothedCounts, n, m);
+
+        // Display the mean penetration level
+        //alert(`Mean Penetration Level (Welford's Method): ${meanPenetration.toFixed(2)}`);
+
+        // Show the download button
+        downloadButton.style.display = 'block';
+    });
+
+    // Allow users to download the image
+    downloadButton.addEventListener('click', function() {
+        const link = document.createElement('a');
+        link.download = 'penetration_simulation.png';
+        link.href = canvas.toDataURL();
+        link.click();
+    });
+</script>
 
 </body>
 
