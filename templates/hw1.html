@@ -163,7 +163,9 @@
     <li><strong>Avoid Catastrophic Cancellation:</strong> Reformulate expressions to reduce the likelihood of subtracting nearly equal numbers. For example, rewriting <code>a - b</code> as <code>(a - b) * (a + b)/(a + b)</code> can help maintain precision.</li>
     <li><strong>Regularly Validate Results:</strong> Incorporate checks to validate the results of floating point calculations against expected outcomes, especially in critical applications.</li>
 </ul>
-    <div class="graph-title">Server Penetration Simulation</div>
+<body>
+
+    <h2>Server Penetration Simulation</h2>
 
     <div id="controls">
         <label for="servers">Number of Servers (n): </label>
@@ -184,6 +186,20 @@
         const ctx = canvas.getContext('2d');
         const simulateButton = document.getElementById('simulate');
         const downloadButton = document.getElementById('downloadBtn');
+
+        // Recursive function to calculate the sum of penetration levels
+        function recursiveSum(arr, index) {
+            if (index < 0) {
+                return 0;
+            }
+            return arr[index] + recursiveSum(arr, index - 1);
+        }
+
+        // Function to calculate the average using recursion
+        function recursiveAverage(arr) {
+            const total = recursiveSum(arr, arr.length - 1);
+            return total / arr.length;
+        }
 
         // Simulate attacks
         function simulatePenetration(n, m, p) {
@@ -217,6 +233,10 @@
                 const sum = levelCounts.slice(start, end + 1).reduce((a, b) => a + b, 0);
                 smoothedCounts[i] = sum / (end - start + 1);
             }
+
+            // Compute the recursive average of penetration levels
+            const avgPenetration = recursiveAverage(penetrationLevels);
+            console.log(`Recursive Average Penetration Level: ${avgPenetration}`);
 
             return { penetrations, smoothedCounts };
         }
@@ -307,20 +327,22 @@
             // Run the simulation
             const { penetrations, smoothedCounts } = simulatePenetration(n, m, p);
 
-            // Draw the simulation
+            // Draw the results
             drawSimulation(penetrations, smoothedCounts, n, m);
 
             // Show the download button
-            downloadButton.style.display = 'inline-block';
+            downloadButton.style.display = 'block';
         });
 
-        // Function to download the canvas as an image
+        // Allow users to download the image
         downloadButton.addEventListener('click', function() {
             const link = document.createElement('a');
-            link.download = 'simulation.png';
-            link.href = canvas.toDataURL('image/png');
+            link.download = 'penetration_simulation.png';
+            link.href = canvas.toDataURL();
             link.click();
         });
     </script>
+
 </body>
+
 </html>
