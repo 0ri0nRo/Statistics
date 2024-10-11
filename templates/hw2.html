@@ -175,6 +175,14 @@
             const height = canvas.height;
             const stepWidth = width / steps;
 
+            // Find the max and min values in the path for scaling
+            const maxValue = Math.max(...path);
+            const minValue = Math.min(...path);
+            
+            // Calculate the scale factor to fit the graph inside the canvas
+            const yRange = maxValue - minValue;
+            const scaleY = (height * 0.8) / yRange;  // 0.8 to add some margin
+
             ctx.clearRect(0, 0, width, height);
             ctx.fillStyle = "white";
             ctx.fillRect(0, 0, width, height);
@@ -183,17 +191,17 @@
             ctx.lineWidth = 2;
 
             ctx.beginPath();
-            ctx.moveTo(0, height / 2);
+            ctx.moveTo(0, height / 2); // Start at the middle of the canvas
             for (let i = 0; i < path.length; i++) {
                 const x = i * stepWidth;
-                const y = (height / 2) - path[i] * (height / 10); // Adjust scaling
+                const y = height - ((path[i] - minValue) * scaleY + height * 0.1); // Scale and center
                 ctx.lineTo(x, y);
             }
             ctx.stroke();
 
             // Show download button
             downloadButton.style.display = 'block';
-        }
+}
 
         runSimulationButton.addEventListener('click', function () {
             const steps = parseInt(document.getElementById('steps').value);
