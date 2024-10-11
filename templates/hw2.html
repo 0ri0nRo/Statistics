@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stochastic Differential Equations & Welford Method</title>
+    <title>Random Walk - Multiple Simulations</title>
     <style>
         body {
             font-family: 'Arial', sans-serif;
@@ -14,7 +14,9 @@
             color: #333;
         }
 
-        h1, h2, h3 {
+        h1,
+        h2,
+        h3 {
             color: #003366;
             margin-top: 20px;
             margin-bottom: 10px;
@@ -29,18 +31,6 @@
             background-color: #e0e0e0;
             padding: 2px 5px;
             border-radius: 3px;
-        }
-
-        .example {
-            background-color: #e8f0fe;
-            padding: 10px;
-            border-left: 5px solid #2196F3;
-            margin: 10px 0;
-            border-radius: 5px;
-        }
-
-        ul {
-            margin: 10px 0 10px 20px;
         }
 
         .container {
@@ -88,29 +78,21 @@
             font-size: 24px;
             font-weight: bold;
         }
+
+        .results {
+            margin-top: 20px;
+        }
     </style>
 </head>
 
 <body>
 
-    <h1>Numerical Solutions of Stochastic Differential Equations</h1>
-    <h2>1. Welford Recursion</h2>
+    <h1>Random Walk - Multiple Simulations</h1>
+    <h2>1. Random Walk Simulation with Multiple Paths</h2>
     <p>
-        Welford's algorithm is an elegant and efficient method to compute running statistics like the mean and variance without needing to store all the data points. This is especially useful in stochastic simulations.
+        This simulation generates multiple random walks, each path representing a different trajectory.
+        The steps of each random walk are drawn from a normal (Gaussian) distribution with mean 0 and variance 1.
     </p>
-
-    <div class="example">
-        <p><strong>Welford’s Method for Mean and Variance:</strong></p>
-        <pre>
-          M_k = M_{k-1} + (x_k - M_{k-1}) / k
-          S_k = S_{k-1} + (x_k - M_{k-1}) * (x_k - M_k)
-
-          Variance = S_n / (n-1)
-        </pre>
-        <p>Here, M is the running mean, S is the sum of squared differences, and x is the current value.</p>
-    </div>
-
-    <h2>2. Euler-Maruyama Simulator for Stochastic Differential Equations</h2>
 
     <div class="container">
         <div class="input-group">
@@ -118,19 +100,20 @@
             <input type="number" id="steps" value="100" min="10" max="1000">
         </div>
         <div class="input-group">
-            <label for="jump-prob">Jump Probability (p):</label>
-            <input type="number" id="jump-prob" value="0.5" min="0" max="1" step="0.01">
+            <label for="paths">Number of Paths:</label>
+            <input type="number" id="paths" value="10" min="1" max="100">
         </div>
         <div class="input-group">
             <label for="time-step">Time Step (Δt):</label>
             <input type="number" id="time-step" value="0.01" min="0.001" max="1" step="0.001">
         </div>
         <div class="input-group">
-            <label for="sim-type">Simulation Type:</label>
-            <select id="sim-type">
-                <option value="bernoulli">Bernoulli Jumps</option>
-                <option value="random-walk">Random Walk</option>
-            </select>
+            <label for="jump-prob">Jump Probability (p):</label>
+            <input type="number" id="jump-prob" value="0.1" min="0.0" max="1.0" step="0.01">
+        </div>
+        <div class="input-group">
+            <label for="freq-interval">Frequency Interval:</label>
+            <input type="number" id="freq-interval" value="10" min="1" max="100">
         </div>
         <button id="run-simulation">Run Simulation</button>
     </div>
@@ -138,93 +121,124 @@
     <div id="results">
         <h2 class="graph-title">Simulation Output</h2>
         <canvas id="plot-canvas" width="800" height="400"></canvas>
+        <div class="results">
+            <h3>Mean and Variance:</h3>
+            <p id="mean-result"></p>
+            <p id="variance-result"></p>
+        </div>
         <button id="downloadBtn" style="display: none;">Download Results</button>
     </div>
-
-    <h3>Observations on Mean and Variance</h3>
-    <p>
-        Keep track of how the mean and variance evolve during the simulation. You'll notice distinct behaviors between the two types of processes: Bernoulli jumps and random walk. Observe how these values change over time for both relative and absolute frequencies.
-    </p>
 
     <script>
         const canvas = document.getElementById('plot-canvas');
         const ctx = canvas.getContext('2d');
         const runSimulationButton = document.getElementById('run-simulation');
         const downloadButton = document.getElementById('downloadBtn');
+        const meanResult = document.getElementById('mean-result');
+        const varianceResult = document.getElementById('variance-result');
 
-        // Euler-Maruyama simulation with Bernoulli jumps and random walk options
-        function simulateSDE(steps, p, dt, type) {
-            let path = [0];  // Initial value
+        // Function to generate random numbers from a Gaussian (normal) distribution
+        function gaussianRandom(mean = 0, stdev = 1) {
+            let u = 1 - Math.random(); // Subtraction to avoid log(0)
+            let v = Math.random();
+            let z = Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+            return z * stdev + mean;
+        }
 
-            // Run simulation
-            for (let i = 1; i <= steps; i++) {
-                if (type === 'bernoulli') {
-                    const jump = Math.random() < p ? 1 : -1;
-                    path.push(path[i - 1] + jump * dt);
-                } else if (type === 'random-walk') {
-                    path.push(path[i - 1] + (Math.random() < p ? 1 : -1));
+        // Function to simulate jumps
+        function randomJump(p) {
+            return Math.random() < p ? (Math.random() < 0.5 ? -1 : 1) : 0; // -1 or +1 with probability p
+        }
+
+        // Random walk simulation with Gaussian distribution steps for multiple paths
+        function simulateRandomWalk(steps, dt, numPaths, jumpProb) {
+            let paths = [];
+            let means = new Array(numPaths).fill(0);
+            let variances = new Array(numPaths).fill(0);
+            let counts = new Array(numPaths).fill(0);
+
+            // Simulate multiple random walks
+            for (let j = 0; j < numPaths; j++) {
+                let path = [0];  // Initial value for each path
+                for (let i = 1; i <= steps; i++) {
+                    const gaussianStep = gaussianRandom(0, Math.sqrt(dt)); // Step with variance √dt
+                    const jump = randomJump(jumpProb); // Step from random jump
+                    path.push(path[i - 1] + gaussianStep + jump);
+                    
+                    // Welford's recursion for mean and variance
+                    counts[j]++;
+                    const delta = path[i] - means[j];
+                    means[j] += delta / counts[j];
+                    const delta2 = path[i] - means[j];
+                    variances[j] += delta * delta2;
                 }
+                paths.push(path);
             }
 
-            return path;
+            // Calculate final mean and variance
+            const finalMeans = means.map(m => m);
+            const finalVariances = variances.map(v => v / (counts[0] - 1));
+
+            // Update the displayed results
+            meanResult.innerText = `Means: ${finalMeans.join(", ")}`;
+            varianceResult.innerText = `Variances: ${finalVariances.join(", ")}`;
+
+            return paths;
         }
 
         // Plot the simulation results
-        function plotResults(path, steps) {
+        function plotResults(paths, steps) {
             const width = canvas.width;
             const height = canvas.height;
             const stepWidth = width / steps;
-
-            // Find the max and min values in the path for scaling
-            const maxValue = Math.max(...path);
-            const minValue = Math.min(...path);
-            
-            // Calculate the scale factor to fit the graph inside the canvas
-            const yRange = maxValue - minValue;
-            const scaleY = (height * 0.8) / yRange;  // 0.8 to add some margin
 
             ctx.clearRect(0, 0, width, height);
             ctx.fillStyle = "white";
             ctx.fillRect(0, 0, width, height);
 
-            ctx.strokeStyle = "blue";
-            ctx.lineWidth = 2;
+            // Colors for different paths
+            const colors = ['red', 'green', 'blue', 'purple', 'orange', 'pink', 'cyan', 'magenta'];
 
-            ctx.beginPath();
-            ctx.moveTo(0, height / 2); // Start at the middle of the canvas
-            for (let i = 0; i < path.length; i++) {
-                const x = i * stepWidth;
-                const y = height - ((path[i] - minValue) * scaleY + height * 0.1); // Scale and center
-                ctx.lineTo(x, y);
-            }
-            ctx.stroke();
+            paths.forEach((path, index) => {
+                const color = colors[index % colors.length];
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 1.5;
+
+                ctx.beginPath();
+                ctx.moveTo(0, height / 2);
+                for (let i = 0; i < path.length; i++) {
+                    const x = i * stepWidth;
+                    const y = (height / 2) - path[i] * (height / 10); // Adjust scaling
+                    ctx.lineTo(x, y);
+                }
+                ctx.stroke();
+            });
 
             // Show download button
             downloadButton.style.display = 'block';
-}
+        }
 
         runSimulationButton.addEventListener('click', function () {
             const steps = parseInt(document.getElementById('steps').value);
-            const p = parseFloat(document.getElementById('jump-prob').value);
+            const numPaths = parseInt(document.getElementById('paths').value);
             const dt = parseFloat(document.getElementById('time-step').value);
-            const type = document.getElementById('sim-type').value;
+            const jumpProb = parseFloat(document.getElementById('jump-prob').value);
 
-            // Run the simulation
-            const path = simulateSDE(steps, p, dt, type);
+            // Run the random walk simulation for multiple paths
+            const paths = simulateRandomWalk(steps, dt, numPaths, jumpProb);
 
             // Plot the results
-            plotResults(path, steps);
+            plotResults(paths, steps);
         });
 
         // Download the graph as an image
         downloadButton.addEventListener('click', function () {
             const link = document.createElement('a');
-            link.download = 'sde_simulation.png';
+            link.download = 'random_walk_simulation.png';
             link.href = canvas.toDataURL();
             link.click();
         });
     </script>
 
 </body>
-
 </html>
