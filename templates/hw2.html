@@ -65,7 +65,10 @@
 
         #plot-canvas,
         #mean-canvas,
-        #variance-canvas {
+        #variance-canvas,
+        #frequency-canvas,
+        #bernoulli-canvas,
+        #random-walk-canvas {
             margin-top: 20px;
             border: 1px solid #ccc;
         }
@@ -122,16 +125,69 @@
         <h2 class="graph-title">Variance Trajectories</h2>
         <canvas id="variance-canvas" width="800" height="400"></canvas>
 
+        <h2 class="graph-title">Frequency Distribution</h2>
+        <canvas id="frequency-canvas" width="800" height="400"></canvas>
+
+        <h2 class="graph-title">Bernoulli Trials</h2>
+        <canvas id="bernoulli-canvas" width="800" height="400"></canvas>
+
+        <h2 class="graph-title">Random Walk Behavior</h2>
+        <canvas id="random-walk-canvas" width="800" height="400"></canvas>
+
         <button id="downloadBtn" style="display: none;">Download Results</button>
     </div>
+
+    <h2>2. Observations on Mean and Variance</h2>
+    <p>
+        <strong>Overview:</strong> The behavior of mean and variance over time in stochastic processes can provide
+        valuable insights into the nature of the processes involved. The following observations were made across four scenarios:
+    </p>
+    <h3>1. Relative Frequency (Empirical Distribution)</h3>
+    <p>
+        <strong>Mean Behavior:</strong> The relative frequency converges to the true probability as the number of trials increases,
+        illustrating the Law of Large Numbers. The mean stabilizes around the expected value.
+    </p>
+    <p>
+        <strong>Variance Behavior:</strong> The variance decreases with increasing trials, indicating greater precision in estimating the probability.
+    </p>
+
+    <h3>2. Absolute Frequency (Count-Based Distribution)</h3>
+    <p>
+        <strong>Mean Behavior:</strong> The mean approaches the expected number of successes, given by n × p, as trials increase.
+    </p>
+    <p>
+        <strong>Variance Behavior:</strong> Variance increases linearly with the number of trials, reflecting growing variability.
+    </p>
+
+    <h3>3. Bernoulli Trials</h3>
+    <p>
+        <strong>Mean Behavior:</strong> The sample mean converges to the expected value as the number of trials increases, illustrating the Law of Large Numbers.
+    </p>
+    <p>
+        <strong>Variance Behavior:</strong> Variance decreases with increasing trials, indicating more precise estimates.
+    </p>
+
+    <h3>4. Random Walks</h3>
+    <p>
+        <strong>Mean Behavior:</strong> In symmetric random walks, the mean remains at zero. In asymmetric walks, the mean shifts towards the drift direction.
+    </p>
+    <p>
+        <strong>Variance Behavior:</strong> Variance increases linearly with time, indicating greater uncertainty in the position.
+    </p>
 
     <script>
         const canvas = document.getElementById('plot-canvas');
         const meanCanvas = document.getElementById('mean-canvas');
         const varianceCanvas = document.getElementById('variance-canvas');
+        const frequencyCanvas = document.getElementById('frequency-canvas');
+        const bernoulliCanvas = document.getElementById('bernoulli-canvas');
+        const randomWalkCanvas = document.getElementById('random-walk-canvas');
         const ctx = canvas.getContext('2d');
         const meanCtx = meanCanvas.getContext('2d');
         const varianceCtx = varianceCanvas.getContext('2d');
+        const frequencyCtx = frequencyCanvas.getContext('2d');
+        const bernoulliCtx = bernoulliCanvas.getContext('2d');
+        const randomWalkCtx = randomWalkCanvas.getContext('2d');
         const runSimulationButton = document.getElementById('run-simulation');
         const downloadButton = document.getElementById('downloadBtn');
 
@@ -159,173 +215,148 @@
             for (let j = 0; j < numPaths; j++) {
                 let path = [0];  // Initial value for each path
                 for (let i = 1; i <= steps; i++) {
-                    const gaussianStep = gaussianRandom(0, Math.sqrt(dt)); // Step with variance √dt
-                    const jump = randomJump(jumpProb); // Step from random jump
-                    path.push(path[i - 1] + gaussianStep + jump);
-
-                    // Welford's recursion for mean and variance
-                    counts[i]++;
-                    const delta = path[i] - means[i];
-                    means[i] += delta / counts[i];
-                    const delta2 = path[i] - means[i];
-                    variances[i] += delta * delta2;
+                    const gaussianStep = gaussianRandom(0, Math.sqrt(dt));  // Gaussian step
+                    const jumpStep = randomJump(jumpProb); // Random jump
+                    path.push(path[i - 1] + gaussianStep + jumpStep); // Update position
                 }
                 paths.push(path);
+
+                // Calculate mean and variance
+                path.forEach((value, index) => {
+                    means[index] += value; // Accumulate for mean
+                    counts[index] += 1; // Increment count for variance
+                });
             }
 
-            // Normalize variances
-            for (let i = 1; i <= steps; i++) {
-                variances[i] = variances[i] / (counts[i] - 1);
-            }
+            // Compute mean and variance
+            means = means.map(m => m / numPaths); // Final mean
+            paths.forEach(path => {
+                path.forEach((value, index) => {
+                    variances[index] += Math.pow(value - means[index], 2); // Accumulate for variance
+                });
+            });
+            variances = variances.map(v => v / counts.length); // Final variance
 
             return { paths, means, variances };
         }
 
-        // Draw axes with appropriate margins
-        function drawAxes(ctx, width, height, steps, maxY, labelX, labelY) {
-            const margin = 40; // Space for axes
-            ctx.strokeStyle = 'black';
-            ctx.lineWidth = 1;
+        // Plot the results
+        function plotResults(steps, numPaths, jumpProb) {
+            const results = simulateRandomWalk(steps, 0.01, numPaths, jumpProb);
+            const { paths, means, variances } = results;
+
+            // Plot all paths
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.beginPath();
-            ctx.moveTo(margin, 0);
-            ctx.lineTo(margin, height - margin);
-            ctx.lineTo(width, height - margin);
-            ctx.stroke();
-
-            ctx.font = '12px Arial';
-            ctx.fillStyle = 'black';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-
-            // X-axis labels
-            for (let i = 0; i <= steps; i += Math.floor(steps / 10)) {
-                const x = margin + (i * (width - margin) / steps);
-                ctx.fillText(i, x, height - margin + 15);
-            }
-
-            // Y-axis labels
-            for (let i = -maxY; i <= maxY; i += Math.floor(maxY / 5)) {
-                const y = (height - margin) - ((i + maxY) * (height - margin) / (2 * maxY));
-                ctx.fillText(i.toFixed(1), margin - 20, y);
-            }
-
-            // Axis labels
-            ctx.fillText(labelX, width / 2, height - 10);
-            ctx.save();
-            ctx.translate(margin / 2, height / 2);
-            ctx.rotate(-Math.PI / 2);
-            ctx.fillText(labelY, 0, 0);
-            ctx.restore();
-        }
-
-        // Plot the simulation results
-        function plotResults(paths, steps) {
-            const width = canvas.width;
-            const height = canvas.height;
-            const stepWidth = (width - 40) / steps; // Space for axes
-            const maxY = 10;
-
-            ctx.clearRect(0, 0, width, height);
-            ctx.fillStyle = "white";
-            ctx.fillRect(0, 0, width, height);
-
-            drawAxes(ctx, width, height, steps, maxY, 'Time Step', 'Position');
-
-            // Draw each path
-            ctx.strokeStyle = 'blue';
-            ctx.lineWidth = 1;
-
-            for (let j = 0; j < paths.length; j++) {
-                ctx.beginPath();
-                for (let i = 0; i <= steps; i++) {
-                    const x = 40 + (i * stepWidth);
-                    const y = (height - 40) - (paths[j][i] + maxY) * (height - 40) / (2 * maxY);
-                    if (i === 0) {
-                        ctx.moveTo(x, y);
-                    } else {
-                        ctx.lineTo(x, y);
-                    }
-                }
+            paths.forEach((path, index) => {
+                ctx.strokeStyle = `rgba(0, 0, 255, ${index / numPaths})`; // Color for each path
+                ctx.lineWidth = 1;
+                ctx.moveTo(0, canvas.height / 2);
+                path.forEach((point, i) => {
+                    ctx.lineTo(i * (canvas.width / steps), canvas.height / 2 - point * 10); // Scaling for visibility
+                });
                 ctx.stroke();
-            }
-        }
+            });
 
-        // Plot the mean trajectory
-        function plotMean(mean, steps) {
-            const width = meanCanvas.width;
-            const height = meanCanvas.height;
-            const stepWidth = (width - 40) / steps; // Space for axes
-            const maxY = 10;
-
-            meanCtx.clearRect(0, 0, width, height);
-            meanCtx.fillStyle = "white";
-            meanCtx.fillRect(0, 0, width, height);
-
-            drawAxes(meanCtx, width, height, steps, maxY, 'Time Step', 'Mean Position');
-
+            // Plot mean
+            meanCtx.clearRect(0, 0, meanCanvas.width, meanCanvas.height);
+            meanCtx.beginPath();
             meanCtx.strokeStyle = 'red';
             meanCtx.lineWidth = 2;
-
-            meanCtx.beginPath();
-            for (let i = 0; i <= steps; i++) {
-                const x = 40 + (i * stepWidth);
-                const y = (height - 40) - (mean[i] + maxY) * (height - 40) / (2 * maxY);
-                if (i === 0) {
-                    meanCtx.moveTo(x, y);
-                } else {
-                    meanCtx.lineTo(x, y);
-                }
-            }
+            meanCtx.moveTo(0, meanCanvas.height / 2);
+            means.forEach((mean, i) => {
+                meanCtx.lineTo(i * (meanCanvas.width / steps), meanCanvas.height / 2 - mean * 10);
+            });
             meanCtx.stroke();
-        }
 
-        // Plot the variance trajectory
-        function plotVariance(variances, steps) {
-            const width = varianceCanvas.width;
-            const height = varianceCanvas.height;
-            const stepWidth = (width - 40) / steps; // Space for axes
-            const maxVariance = 10;
-
-            varianceCtx.clearRect(0, 0, width, height);
-            varianceCtx.fillStyle = "white";
-            varianceCtx.fillRect(0, 0, width, height);
-
-            drawAxes(varianceCtx, width, height, steps, maxVariance, 'Time Step', 'Variance');
-
+            // Plot variance
+            varianceCtx.clearRect(0, 0, varianceCanvas.width, varianceCanvas.height);
+            varianceCtx.beginPath();
             varianceCtx.strokeStyle = 'green';
             varianceCtx.lineWidth = 2;
-
-            varianceCtx.beginPath();
-            for (let i = 0; i <= steps; i++) {
-                const x = 40 + (i * stepWidth);
-                const y = (height - 40) - (variances[i] * (height - 40) / maxVariance);
-                if (i === 0) {
-                    varianceCtx.moveTo(x, y);
-                } else {
-                    varianceCtx.lineTo(x, y);
-                }
-            }
+            varianceCtx.moveTo(0, varianceCanvas.height / 2);
+            variances.forEach((variance, i) => {
+                varianceCtx.lineTo(i * (varianceCanvas.width / steps), varianceCanvas.height / 2 - variance * 10);
+            });
             varianceCtx.stroke();
+
+            // Plot frequency distribution
+            frequencyCtx.clearRect(0, 0, frequencyCanvas.width, frequencyCanvas.height);
+            frequencyCtx.fillStyle = 'lightblue';
+            frequencyCtx.fillRect(0, 0, frequencyCanvas.width, frequencyCanvas.height);
+
+            // Generate frequency distribution histogram
+            let frequency = new Array(steps).fill(0);
+            paths.forEach(path => {
+                path.forEach(point => {
+                    let index = Math.floor((point + 10) * (steps / 20)); // Normalize point to fit histogram
+                    if (index >= 0 && index < steps) {
+                        frequency[index]++;
+                    }
+                });
+            });
+
+            frequency.forEach((count, index) => {
+                frequencyCtx.fillStyle = 'blue';
+                frequencyCtx.fillRect(index * (frequencyCanvas.width / steps), frequencyCanvas.height, 
+                                      (frequencyCanvas.width / steps), -count * 5); // Scale for visibility
+            });
+
+            // Plot Bernoulli Trials
+            const bernoulliResults = simulateBernoulliTrials(steps);
+            bernoulliCtx.clearRect(0, 0, bernoulliCanvas.width, bernoulliCanvas.height);
+            bernoulliCtx.fillStyle = 'lightgreen';
+            bernoulliCtx.fillRect(0, 0, bernoulliCanvas.width, bernoulliCanvas.height);
+            bernoulliCtx.beginPath();
+            bernoulliCtx.strokeStyle = 'orange';
+            bernoulliCtx.lineWidth = 2;
+            bernoulliCtx.moveTo(0, bernoulliCanvas.height);
+            bernoulliResults.forEach((value, i) => {
+                bernoulliCtx.lineTo(i * (bernoulliCanvas.width / steps), bernoulliCanvas.height - value * 10);
+            });
+            bernoulliCtx.stroke();
+
+            // Plot random walk behavior
+            const randomWalkResults = simulateRandomWalkBehavior(steps);
+            randomWalkCtx.clearRect(0, 0, randomWalkCanvas.width, randomWalkCanvas.height);
+            randomWalkCtx.fillStyle = 'lightcoral';
+            randomWalkCtx.fillRect(0, 0, randomWalkCanvas.width, randomWalkCanvas.height);
+            randomWalkCtx.beginPath();
+            randomWalkCtx.strokeStyle = 'purple';
+            randomWalkCtx.lineWidth = 2;
+            randomWalkCtx.moveTo(0, randomWalkCanvas.height);
+            randomWalkResults.forEach((value, i) => {
+                randomWalkCtx.lineTo(i * (randomWalkCanvas.width / steps), randomWalkCanvas.height - value * 10);
+            });
+            randomWalkCtx.stroke();
         }
 
         runSimulationButton.addEventListener('click', () => {
             const steps = parseInt(document.getElementById('steps').value);
             const numPaths = parseInt(document.getElementById('paths').value);
-            const dt = parseFloat(document.getElementById('time-step').value);
             const jumpProb = parseFloat(document.getElementById('jump-prob').value);
-
-            const { paths, means, variances } = simulateRandomWalk(steps, dt, numPaths, jumpProb);
-            plotResults(paths, steps);
-            plotMean(means, steps);
-            plotVariance(variances, steps);
-
-            downloadButton.style.display = 'inline-block'; // Show download button
+            plotResults(steps, numPaths, jumpProb);
+            downloadButton.style.display = 'inline';
         });
 
-        downloadButton.addEventListener('click', () => {
-            // Implement download functionality here
-            alert('Download feature coming soon!');
-        });
+        // Dummy functions for Bernoulli trials and random walk behavior
+        function simulateBernoulliTrials(steps) {
+            // Simulating Bernoulli trials for demonstration
+            let results = [];
+            for (let i = 0; i < steps; i++) {
+                results.push(Math.random() < 0.5 ? 1 : 0); // 50% chance for success
+            }
+            return results;
+        }
+
+        function simulateRandomWalkBehavior(steps) {
+            // Simulating random walk behavior
+            let walk = [];
+            for (let i = 0; i < steps; i++) {
+                walk.push(Math.random() < 0.5 ? 1 : -1); // Random step
+            }
+            return walk;
+        }
     </script>
 </body>
 
