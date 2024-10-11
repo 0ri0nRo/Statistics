@@ -63,7 +63,9 @@
             background-color: #45a049;
         }
 
-        #plot-canvas {
+        #plot-canvas,
+        #mean-canvas,
+        #variance-canvas {
             margin-top: 20px;
             border: 1px solid #ccc;
         }
@@ -77,10 +79,6 @@
             margin-bottom: 10px;
             font-size: 24px;
             font-weight: bold;
-        }
-
-        .results {
-            margin-top: 20px;
         }
     </style>
 </head>
@@ -111,31 +109,31 @@
             <label for="jump-prob">Jump Probability (p):</label>
             <input type="number" id="jump-prob" value="0.1" min="0.0" max="1.0" step="0.01">
         </div>
-        <div class="input-group">
-            <label for="freq-interval">Frequency Interval:</label>
-            <input type="number" id="freq-interval" value="10" min="1" max="100">
-        </div>
         <button id="run-simulation">Run Simulation</button>
     </div>
 
     <div id="results">
         <h2 class="graph-title">Simulation Output</h2>
         <canvas id="plot-canvas" width="800" height="400"></canvas>
-        <div class="results">
-            <h3>Mean and Variance:</h3>
-            <p id="mean-result"></p>
-            <p id="variance-result"></p>
-        </div>
+
+        <h2 class="graph-title">Mean Trajectories</h2>
+        <canvas id="mean-canvas" width="800" height="400"></canvas>
+
+        <h2 class="graph-title">Variance Trajectories</h2>
+        <canvas id="variance-canvas" width="800" height="400"></canvas>
+
         <button id="downloadBtn" style="display: none;">Download Results</button>
     </div>
 
     <script>
         const canvas = document.getElementById('plot-canvas');
+        const meanCanvas = document.getElementById('mean-canvas');
+        const varianceCanvas = document.getElementById('variance-canvas');
         const ctx = canvas.getContext('2d');
+        const meanCtx = meanCanvas.getContext('2d');
+        const varianceCtx = varianceCanvas.getContext('2d');
         const runSimulationButton = document.getElementById('run-simulation');
         const downloadButton = document.getElementById('downloadBtn');
-        const meanResult = document.getElementById('mean-result');
-        const varianceResult = document.getElementById('variance-result');
 
         // Function to generate random numbers from a Gaussian (normal) distribution
         function gaussianRandom(mean = 0, stdev = 1) {
@@ -153,9 +151,9 @@
         // Random walk simulation with Gaussian distribution steps for multiple paths
         function simulateRandomWalk(steps, dt, numPaths, jumpProb) {
             let paths = [];
-            let means = new Array(numPaths).fill(0);
-            let variances = new Array(numPaths).fill(0);
-            let counts = new Array(numPaths).fill(0);
+            let means = new Array(steps + 1).fill(0);  // Initialize mean array
+            let variances = new Array(steps + 1).fill(0); // Initialize variance array
+            let counts = new Array(steps + 1).fill(0); // Count occurrences for mean and variance
 
             // Simulate multiple random walks
             for (let j = 0; j < numPaths; j++) {
@@ -164,81 +162,171 @@
                     const gaussianStep = gaussianRandom(0, Math.sqrt(dt)); // Step with variance √dt
                     const jump = randomJump(jumpProb); // Step from random jump
                     path.push(path[i - 1] + gaussianStep + jump);
-                    
+
                     // Welford's recursion for mean and variance
-                    counts[j]++;
-                    const delta = path[i] - means[j];
-                    means[j] += delta / counts[j];
-                    const delta2 = path[i] - means[j];
-                    variances[j] += delta * delta2;
+                    counts[i]++;
+                    const delta = path[i] - means[i];
+                    means[i] += delta / counts[i];
+                    const delta2 = path[i] - means[i];
+                    variances[i] += delta * delta2;
                 }
                 paths.push(path);
             }
 
-            // Calculate final mean and variance
-            const finalMeans = means.map(m => m);
-            const finalVariances = variances.map(v => v / (counts[0] - 1));
+            // Normalize variances
+            for (let i = 1; i <= steps; i++) {
+                variances[i] = variances[i] / (counts[i] - 1);
+            }
 
-            // Update the displayed results
-            meanResult.innerText = `Means: ${finalMeans.join(", ")}`;
-            varianceResult.innerText = `Variances: ${finalVariances.join(", ")}`;
+            return { paths, means, variances };
+        }
 
-            return paths;
+        // Draw axes with appropriate margins
+        function drawAxes(ctx, width, height, steps, maxY, labelX, labelY) {
+            const margin = 40; // Space for axes
+            ctx.strokeStyle = 'black';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(margin, 0);
+            ctx.lineTo(margin, height - margin);
+            ctx.lineTo(width, height - margin);
+            ctx.stroke();
+
+            ctx.font = '12px Arial';
+            ctx.fillStyle = 'black';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+
+            // X-axis labels
+            for (let i = 0; i <= steps; i += Math.floor(steps / 10)) {
+                const x = margin + (i * (width - margin) / steps);
+                ctx.fillText(i, x, height - margin + 15);
+            }
+
+            // Y-axis labels
+            for (let i = -maxY; i <= maxY; i += Math.floor(maxY / 5)) {
+                const y = (height - margin) - ((i + maxY) * (height - margin) / (2 * maxY));
+                ctx.fillText(i.toFixed(1), margin - 20, y);
+            }
+
+            // Axis labels
+            ctx.fillText(labelX, width / 2, height - 10);
+            ctx.save();
+            ctx.translate(margin / 2, height / 2);
+            ctx.rotate(-Math.PI / 2);
+            ctx.fillText(labelY, 0, 0);
+            ctx.restore();
         }
 
         // Plot the simulation results
         function plotResults(paths, steps) {
             const width = canvas.width;
             const height = canvas.height;
-            const stepWidth = width / steps;
+            const stepWidth = (width - 40) / steps; // Space for axes
+            const maxY = 10;
 
             ctx.clearRect(0, 0, width, height);
             ctx.fillStyle = "white";
             ctx.fillRect(0, 0, width, height);
 
-            // Colors for different paths
-            const colors = ['red', 'green', 'blue', 'purple', 'orange', 'pink', 'cyan', 'magenta'];
+            drawAxes(ctx, width, height, steps, maxY, 'Time Step', 'Position');
 
-            paths.forEach((path, index) => {
-                const color = colors[index % colors.length];
-                ctx.strokeStyle = color;
-                ctx.lineWidth = 1.5;
+            // Draw each path
+            ctx.strokeStyle = 'blue';
+            ctx.lineWidth = 1;
 
+            for (let j = 0; j < paths.length; j++) {
                 ctx.beginPath();
-                ctx.moveTo(0, height / 2);
-                for (let i = 0; i < path.length; i++) {
-                    const x = i * stepWidth;
-                    const y = (height / 2) - path[i] * (height / 10); // Adjust scaling
-                    ctx.lineTo(x, y);
+                for (let i = 0; i <= steps; i++) {
+                    const x = 40 + (i * stepWidth);
+                    const y = (height - 40) - (paths[j][i] + maxY) * (height - 40) / (2 * maxY);
+                    if (i === 0) {
+                        ctx.moveTo(x, y);
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
                 }
                 ctx.stroke();
-            });
-
-            // Show download button
-            downloadButton.style.display = 'block';
+            }
         }
 
-        runSimulationButton.addEventListener('click', function () {
+        // Plot the mean trajectory
+        function plotMean(mean, steps) {
+            const width = meanCanvas.width;
+            const height = meanCanvas.height;
+            const stepWidth = (width - 40) / steps; // Space for axes
+            const maxY = 10;
+
+            meanCtx.clearRect(0, 0, width, height);
+            meanCtx.fillStyle = "white";
+            meanCtx.fillRect(0, 0, width, height);
+
+            drawAxes(meanCtx, width, height, steps, maxY, 'Time Step', 'Mean Position');
+
+            meanCtx.strokeStyle = 'red';
+            meanCtx.lineWidth = 2;
+
+            meanCtx.beginPath();
+            for (let i = 0; i <= steps; i++) {
+                const x = 40 + (i * stepWidth);
+                const y = (height - 40) - (mean[i] + maxY) * (height - 40) / (2 * maxY);
+                if (i === 0) {
+                    meanCtx.moveTo(x, y);
+                } else {
+                    meanCtx.lineTo(x, y);
+                }
+            }
+            meanCtx.stroke();
+        }
+
+        // Plot the variance trajectory
+        function plotVariance(variances, steps) {
+            const width = varianceCanvas.width;
+            const height = varianceCanvas.height;
+            const stepWidth = (width - 40) / steps; // Space for axes
+            const maxVariance = 10;
+
+            varianceCtx.clearRect(0, 0, width, height);
+            varianceCtx.fillStyle = "white";
+            varianceCtx.fillRect(0, 0, width, height);
+
+            drawAxes(varianceCtx, width, height, steps, maxVariance, 'Time Step', 'Variance');
+
+            varianceCtx.strokeStyle = 'green';
+            varianceCtx.lineWidth = 2;
+
+            varianceCtx.beginPath();
+            for (let i = 0; i <= steps; i++) {
+                const x = 40 + (i * stepWidth);
+                const y = (height - 40) - (variances[i] * (height - 40) / maxVariance);
+                if (i === 0) {
+                    varianceCtx.moveTo(x, y);
+                } else {
+                    varianceCtx.lineTo(x, y);
+                }
+            }
+            varianceCtx.stroke();
+        }
+
+        runSimulationButton.addEventListener('click', () => {
             const steps = parseInt(document.getElementById('steps').value);
             const numPaths = parseInt(document.getElementById('paths').value);
             const dt = parseFloat(document.getElementById('time-step').value);
             const jumpProb = parseFloat(document.getElementById('jump-prob').value);
 
-            // Run the random walk simulation for multiple paths
-            const paths = simulateRandomWalk(steps, dt, numPaths, jumpProb);
-
-            // Plot the results
+            const { paths, means, variances } = simulateRandomWalk(steps, dt, numPaths, jumpProb);
             plotResults(paths, steps);
+            plotMean(means, steps);
+            plotVariance(variances, steps);
+
+            downloadButton.style.display = 'inline-block'; // Show download button
         });
 
-        // Download the graph as an image
-        downloadButton.addEventListener('click', function () {
-            const link = document.createElement('a');
-            link.download = 'random_walk_simulation.png';
-            link.href = canvas.toDataURL();
-            link.click();
+        downloadButton.addEventListener('click', () => {
+            // Implement download functionality here
+            alert('Download feature coming soon!');
         });
     </script>
-
 </body>
+
 </html>
