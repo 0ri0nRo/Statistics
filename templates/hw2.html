@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stochastic Differential Equations & Welford Method</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            margin: 20px;
+            background-color: #f9f9f9;
+            color: #333;
+        }
+
+        h1, h2, h3 {
+            color: #003366;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+
+        p {
+            margin: 10px 0;
+            text-align: justify;
+        }
+
+        code {
+            background-color: #e0e0e0;
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+
+        .example {
+            background-color: #e8f0fe;
+            padding: 10px;
+            border-left: 5px solid #2196F3;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+
+        ul {
+            margin: 10px 0 10px 20px;
+        }
+
+        .container {
+            margin-top: 20px;
+        }
+
+        .input-group {
+            margin: 10px 0;
+        }
+
+        label {
+            display: inline-block;
+            width: 150px;
+        }
+
+        input[type="number"] {
+            width: 80px;
+            padding: 5px;
+        }
+
+        button {
+            padding: 10px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        #plot-canvas {
+            margin-top: 20px;
+            border: 1px solid #ccc;
+        }
+
+        .graph-title {
+            background-color: #4A90E2;
+            color: white;
+            padding: 10px;
+            text-align: center;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            font-size: 24px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>Numerical Solutions of Stochastic Differential Equations</h1>
+    <h2>1. Welford Recursion</h2>
+    <p>
+        Welford's algorithm is an elegant and efficient method to compute running statistics like the mean and variance without needing to store all the data points. This is especially useful in stochastic simulations.
+    </p>
+
+    <div class="example">
+        <p><strong>Welford’s Method for Mean and Variance:</strong></p>
+        <pre>
+          M_k = M_{k-1} + (x_k - M_{k-1}) / k
+          S_k = S_{k-1} + (x_k - M_{k-1}) * (x_k - M_k)
+
+          Variance = S_n / (n-1)
+        </pre>
+        <p>Here, M is the running mean, S is the sum of squared differences, and x is the current value.</p>
+    </div>
+
+    <h2>2. Euler-Maruyama Simulator for Stochastic Differential Equations</h2>
+
+    <div class="container">
+        <div class="input-group">
+            <label for="steps">Number of Steps:</label>
+            <input type="number" id="steps" value="100" min="10" max="1000">
+        </div>
+        <div class="input-group">
+            <label for="jump-prob">Jump Probability (p):</label>
+            <input type="number" id="jump-prob" value="0.5" min="0" max="1" step="0.01">
+        </div>
+        <div class="input-group">
+            <label for="time-step">Time Step (Δt):</label>
+            <input type="number" id="time-step" value="0.01" min="0.001" max="1" step="0.001">
+        </div>
+        <div class="input-group">
+            <label for="sim-type">Simulation Type:</label>
+            <select id="sim-type">
+                <option value="bernoulli">Bernoulli Jumps</option>
+                <option value="random-walk">Random Walk</option>
+            </select>
+        </div>
+        <button id="run-simulation">Run Simulation</button>
+    </div>
+
+    <div id="results">
+        <h2 class="graph-title">Simulation Output</h2>
+        <canvas id="plot-canvas" width="800" height="400"></canvas>
+        <button id="downloadBtn" style="display: none;">Download Results</button>
+    </div>
+
+    <h3>Observations on Mean and Variance</h3>
+    <p>
+        Keep track of how the mean and variance evolve during the simulation. You'll notice distinct behaviors between the two types of processes: Bernoulli jumps and random walk. Observe how these values change over time for both relative and absolute frequencies.
+    </p>
+
+    <script>
+        const canvas = document.getElementById('plot-canvas');
+        const ctx = canvas.getContext('2d');
+        const runSimulationButton = document.getElementById('run-simulation');
+        const downloadButton = document.getElementById('downloadBtn');
+
+        // Euler-Maruyama simulation with Bernoulli jumps and random walk options
+        function simulateSDE(steps, p, dt, type) {
+            let path = [0];  // Initial value
+
+            // Run simulation
+            for (let i = 1; i <= steps; i++) {
+                if (type === 'bernoulli') {
+                    const jump = Math.random() < p ? 1 : -1;
+                    path.push(path[i - 1] + jump * dt);
+                } else if (type === 'random-walk') {
+                    path.push(path[i - 1] + (Math.random() < p ? 1 : -1));
+                }
+            }
+
+            return path;
+        }
+
+        // Plot the simulation results
+        function plotResults(path, steps) {
+            const width = canvas.width;
+            const height = canvas.height;
+            const stepWidth = width / steps;
+
+            ctx.clearRect(0, 0, width, height);
+            ctx.fillStyle = "white";
+            ctx.fillRect(0, 0, width, height);
+
+            ctx.strokeStyle = "blue";
+            ctx.lineWidth = 2;
+
+            ctx.beginPath();
+            ctx.moveTo(0, height / 2);
+            for (let i = 0; i < path.length; i++) {
+                const x = i * stepWidth;
+                const y = (height / 2) - path[i] * (height / 10); // Adjust scaling
+                ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+
+            // Show download button
+            downloadButton.style.display = 'block';
+        }
+
+        runSimulationButton.addEventListener('click', function () {
+            const steps = parseInt(document.getElementById('steps').value);
+            const p = parseFloat(document.getElementById('jump-prob').value);
+            const dt = parseFloat(document.getElementById('time-step').value);
+            const type = document.getElementById('sim-type').value;
+
+            // Run the simulation
+            const path = simulateSDE(steps, p, dt, type);
+
+            // Plot the results
+            plotResults(path, steps);
+        });
+
+        // Download the graph as an image
+        downloadButton.addEventListener('click', function () {
+            const link = document.createElement('a');
+            link.download = 'sde_simulation.png';
+            link.href = canvas.toDataURL();
+            link.click();
+        });
+    </script>
+
+</body>
+
+</html>
