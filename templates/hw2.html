@@ -292,73 +292,73 @@
 
             downloadButton.style.display = 'inline';
             // Funzione per aggiungere etichette agli assi X e Y
-function drawAxisLabels(ctx, canvas, xlabel, ylabel) {
-    ctx.font = "16px Arial";
-    ctx.fillStyle = "#000"; // Colore nero per il testo
+            function drawAxisLabels(ctx, canvas, xlabel, ylabel) {
+                ctx.font = "16px Arial";
+                ctx.fillStyle = "#000"; // Colore nero per il testo
 
-    // Etichetta asse X (posizionata al centro in basso)
-    ctx.fillText(xlabel, canvas.width / 2 - 30, canvas.height - 10);
+                // Etichetta asse X (posizionata al centro in basso)
+                ctx.fillText(xlabel, canvas.width / 2 - 30, canvas.height - 10);
 
-    // Etichetta asse Y (posizionata in alto a sinistra e ruotata)
-    ctx.save(); // Salva il contesto corrente
-    ctx.translate(20, canvas.height / 2); // Trasla il contesto
-    ctx.rotate(-Math.PI / 2); // Ruota il contesto per posizionare il testo verticalmente
-    ctx.fillText(ylabel, -canvas.height / 2 + 30, -5);
-    ctx.restore(); // Ripristina il contesto originale
-    }
+                // Etichetta asse Y (posizionata in alto a sinistra e ruotata)
+                ctx.save(); // Salva il contesto corrente
+                ctx.translate(20, canvas.height / 2); // Trasla il contesto
+                ctx.rotate(-Math.PI / 2); // Ruota il contesto per posizionare il testo verticalmente
+                ctx.fillText(ylabel, -canvas.height / 2 + 30, -5);
+                ctx.restore(); // Ripristina il contesto originale
+                }
 
-    // Funzione per disegnare i percorsi con le etichette degli assi
-    function drawPaths(paths) {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        const maxSteps = paths[0].length - 1;
-        const maxAbsValue = Math.max(...paths.map(path => Math.max(...path.map(Math.abs))));
+                // Funzione per disegnare i percorsi con le etichette degli assi
+                function drawPaths(paths) {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    const maxSteps = paths[0].length - 1;
+                    const maxAbsValue = Math.max(...paths.map(path => Math.max(...path.map(Math.abs))));
 
-        ctx.beginPath();
-        paths.forEach(path => {
-            ctx.moveTo(0, canvas.height / 2);
-            path.forEach((y, i) => {
-                ctx.lineTo((i / maxSteps) * canvas.width, (1 - (y / maxAbsValue)) * canvas.height / 2);
-            });
-        });
-        ctx.stroke();
+                    ctx.beginPath();
+                    paths.forEach(path => {
+                        ctx.moveTo(0, canvas.height / 2);
+                        path.forEach((y, i) => {
+                            ctx.lineTo((i / maxSteps) * canvas.width, (1 - (y / maxAbsValue)) * canvas.height / 2);
+                        });
+                    });
+                    ctx.stroke();
 
-        // Aggiungi le etichette per asse X e Y
-        drawAxisLabels(ctx, canvas, "Time Steps", "Position");
-    }
+                    // Aggiungi le etichette per asse X e Y
+                    drawAxisLabels(ctx, canvas, "Time Steps", "Position");
+                }
 
-    // Funzione per disegnare la traiettoria media con le etichette degli assi
-    function drawMean(means) {
-        meanCtx.clearRect(0, 0, meanCanvas.width, meanCanvas.height);
-        const maxSteps = means.length - 1;
-        const maxAbsValue = Math.max(...means.map(Math.abs));
+                // Funzione per disegnare la traiettoria media con le etichette degli assi
+                function drawMean(means) {
+                    meanCtx.clearRect(0, 0, meanCanvas.width, meanCanvas.height);
+                    const maxSteps = means.length - 1;
+                    const maxAbsValue = Math.max(...means.map(Math.abs));
 
-        meanCtx.beginPath();
-        means.forEach((mean, i) => {
-            meanCtx.lineTo((i / maxSteps) * meanCanvas.width, (1 - (mean / maxAbsValue)) * meanCanvas.height / 2);
-        });
-        meanCtx.stroke();
+                    meanCtx.beginPath();
+                    means.forEach((mean, i) => {
+                        meanCtx.lineTo((i / maxSteps) * meanCanvas.width, (1 - (mean / maxAbsValue)) * meanCanvas.height / 2);
+                    });
+                    meanCtx.stroke();
 
-        // Aggiungi le etichette per asse X e Y
-        drawAxisLabels(meanCtx, meanCanvas, "Time Steps", "Mean Position");
-    }
+                    // Aggiungi le etichette per asse X e Y
+                    drawAxisLabels(meanCtx, meanCanvas, "Time Steps", "Mean Position");
+                }
 
-    // Funzione per disegnare la varianza con le etichette degli assi
-    function drawVariance(variances) {
-        varianceCtx.clearRect(0, 0, varianceCanvas.width, varianceCanvas.height);
-        const maxSteps = variances.length - 1;
-        const maxVariance = Math.max(...variances);
+                // Funzione per disegnare la varianza con le etichette degli assi
+                function drawVariance(variances) {
+                    varianceCtx.clearRect(0, 0, varianceCanvas.width, varianceCanvas.height);
+                    const maxSteps = variances.length - 1;
+                    const maxVariance = Math.max(...variances);
 
-        varianceCtx.beginPath();
-        variances.forEach((variance, i) => {
-            varianceCtx.lineTo((i / maxSteps) * varianceCanvas.width, (1 - (variance / maxVariance)) * varianceCanvas.height / 2);
-        });
-        varianceCtx.stroke();
+                    varianceCtx.beginPath();
+                    variances.forEach((variance, i) => {
+                        varianceCtx.lineTo((i / maxSteps) * varianceCanvas.width, (1 - (variance / maxVariance)) * varianceCanvas.height / 2);
+                    });
+                    varianceCtx.stroke();
 
-        // Aggiungi le etichette per asse X e Y
-        drawAxisLabels(varianceCtx, varianceCanvas, "Time Steps", "Variance");
-    }
+                    // Aggiungi le etichette per asse X e Y
+                    drawAxisLabels(varianceCtx, varianceCanvas, "Time Steps", "Variance");
+                }
 
-        });
+                    });
 
     </script>
 </body>
