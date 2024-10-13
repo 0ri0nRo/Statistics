@@ -81,6 +81,21 @@
             font-size: 24px;
             font-weight: bold;
         }
+
+        .explanation-box {
+            background-color: #e6f7ff;
+            border-left: 6px solid #2196F3;
+            margin: 20px 0;
+            padding: 10px;
+        }
+
+        .explanation-box h3 {
+            color: #003366;
+        }
+
+        .explanation-box p {
+            font-size: 14px;
+        }
     </style>
 </head>
 
@@ -124,6 +139,44 @@
         <canvas id="variance-canvas" width="800" height="400"></canvas>
 
         <button id="downloadBtn" style="display: none;">Download Results</button>
+    </div>
+
+    <!-- Explanation Boxes -->
+    <div class="explanation-box">
+        <h3>What is a Random Walk?</h3>
+        <p>
+            A random walk is a mathematical process that describes a path consisting of a series of random steps. In this
+            simulation, each step is a combination of a random jump and a Gaussian step. Random walks are used to model
+            phenomena in fields like physics (e.g., particle diffusion), finance (e.g., stock prices), and biology (e.g., animal movements).
+        </p>
+    </div>
+
+    <div class="explanation-box">
+        <h3>Gaussian (Normal) Distribution</h3>
+        <p>
+            The Gaussian (or Normal) distribution is a probability distribution commonly used in statistics. In this simulation, 
+            each step of the random walk is drawn from a Gaussian distribution with a mean of 0 and a variance proportional 
+            to the time step size (Δt). This means that the step size is random but centered around zero, with most steps 
+            being relatively small.
+        </p>
+    </div>
+
+    <div class="explanation-box">
+        <h3>Jump Probability</h3>
+        <p>
+            The jump probability (p) in this simulation introduces the possibility that, at each step, the particle may make 
+            a larger, sudden jump either forward or backward with a given probability. This makes the walk a bit more 
+            dynamic, allowing for occasional large deviations in the path.
+        </p>
+    </div>
+
+    <div class="explanation-box">
+        <h3>Mean and Variance</h3>
+        <p>
+            The mean trajectory is the average position of all paths at each time step. The variance measures how 
+            spread out the paths are from the mean. In this simulation, the mean and variance are computed using 
+            Welford's algorithm, which allows for updating the mean and variance dynamically as each new step is added.
+        </p>
     </div>
 
     <script>
@@ -182,151 +235,131 @@
             return { paths, means, variances };
         }
 
-        // Draw axes with appropriate margins
-        function drawAxes(ctx, width, height, steps, maxY, labelX, labelY) {
-            const margin = 40; // Space for axes
-            ctx.strokeStyle = 'black';
-            ctx.lineWidth = 1;
+        // Drawing the paths on the canvas
+        function drawPaths(paths) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const maxSteps = paths[0].length - 1;
+            const maxAbsValue = Math.max(...paths.map(path => Math.max(...path.map(Math.abs))));
+
             ctx.beginPath();
-            ctx.moveTo(margin, 0);
-            ctx.lineTo(margin, height - margin);
-            ctx.lineTo(width, height - margin);
+            paths.forEach(path => {
+                ctx.moveTo(0, canvas.height / 2);
+                path.forEach((y, i) => {
+                    ctx.lineTo((i / maxSteps) * canvas.width, (1 - (y / maxAbsValue)) * canvas.height / 2);
+                });
+            });
             ctx.stroke();
-
-            ctx.font = '12px Arial';
-            ctx.fillStyle = 'black';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-
-            // X-axis labels
-            for (let i = 0; i <= steps; i += Math.floor(steps / 10)) {
-                const x = margin + (i * (width - margin) / steps);
-                ctx.fillText(i, x, height - margin + 15);
-            }
-
-            // Y-axis labels
-            for (let i = -maxY; i <= maxY; i += Math.floor(maxY / 5)) {
-                const y = (height - margin) - ((i + maxY) * (height - margin) / (2 * maxY));
-                ctx.fillText(i.toFixed(1), margin - 20, y);
-            }
-
-            // Axis labels
-            ctx.fillText(labelX, width / 2, height - 10);
-            ctx.save();
-            ctx.translate(margin / 2, height / 2);
-            ctx.rotate(-Math.PI / 2);
-            ctx.fillText(labelY, 0, 0);
-            ctx.restore();
         }
 
-        // Plot the simulation results
-        function plotResults(paths, steps) {
-            const width = canvas.width;
-            const height = canvas.height;
-            const stepWidth = (width - 40) / steps; // Space for axes
-            const maxY = Math.max(10, ...paths.flat().map(Math.abs)); // Adjust maxY dynamically
-
-            ctx.clearRect(0, 0, width, height);
-            ctx.fillStyle = "white";
-            ctx.fillRect(0, 0, width, height);
-
-            drawAxes(ctx, width, height, steps, maxY, 'Time Step', 'Position');
-
-            // Draw each path
-            ctx.strokeStyle = 'blue';
-            ctx.lineWidth = 1;
-
-            for (let j = 0; j < paths.length; j++) {
-                ctx.beginPath();
-                for (let i = 0; i <= steps; i++) {
-                    const x = 40 + (i * stepWidth);
-                    const y = (height - 40) - (paths[j][i] + maxY) * (height - 40) / (2 * maxY);
-                    if (i === 0) {
-                        ctx.moveTo(x, y);
-                    } else {
-                        ctx.lineTo(x, y);
-                    }
-                }
-                ctx.stroke();
-            }
-        }
-
-        // Plot the mean trajectory
-        function plotMean(mean, steps) {
-            const width = meanCanvas.width;
-            const height = meanCanvas.height;
-            const stepWidth = (width - 40) / steps; // Space for axes
-            const maxY = Math.max(10, ...mean.map(Math.abs)); // Adjust maxY dynamically
-
-            meanCtx.clearRect(0, 0, width, height);
-            meanCtx.fillStyle = "white";
-            meanCtx.fillRect(0, 0, width, height);
-
-            drawAxes(meanCtx, width, height, steps, maxY, 'Time Step', 'Mean Position');
-
-            meanCtx.strokeStyle = 'red';
-            meanCtx.lineWidth = 2;
+        // Drawing the mean trajectory
+        function drawMean(means) {
+            meanCtx.clearRect(0, 0, meanCanvas.width, meanCanvas.height);
+            const maxSteps = means.length - 1;
+            const maxAbsValue = Math.max(...means.map(Math.abs));
 
             meanCtx.beginPath();
-            for (let i = 0; i <= steps; i++) {
-                const x = 40 + (i * stepWidth);
-                const y = (height - 40) - (mean[i] + maxY) * (height - 40) / (2 * maxY);
-                if (i === 0) {
-                    meanCtx.moveTo(x, y);
-                } else {
-                    meanCtx.lineTo(x, y);
-                }
-            }
+            means.forEach((mean, i) => {
+                meanCtx.lineTo((i / maxSteps) * meanCanvas.width, (1 - (mean / maxAbsValue)) * meanCanvas.height / 2);
+            });
             meanCtx.stroke();
         }
 
-        // Plot the variance trajectory
-        function plotVariance(variances, steps) {
-            const width = varianceCanvas.width;
-            const height = varianceCanvas.height;
-            const stepWidth = (width - 40) / steps; // Space for axes
-            const maxVariance = Math.max(10, ...variances); // Adjust maxVariance dynamically
-
-            varianceCtx.clearRect(0, 0, width, height);
-            varianceCtx.fillStyle = "white";
-            varianceCtx.fillRect(0, 0, width, height);
-
-            drawAxes(varianceCtx, width, height, steps, maxVariance, 'Time Step', 'Variance');
-
-            varianceCtx.strokeStyle = 'green';
-            varianceCtx.lineWidth = 2;
+        // Drawing the variance trajectory
+        function drawVariance(variances) {
+            varianceCtx.clearRect(0, 0, varianceCanvas.width, varianceCanvas.height);
+            const maxSteps = variances.length - 1;
+            const maxVariance = Math.max(...variances);
 
             varianceCtx.beginPath();
-            for (let i = 0; i <= steps; i++) {
-                const x = 40 + (i * stepWidth);
-                const y = (height - 40) - (variances[i] * (height - 40) / maxVariance);
-                if (i === 0) {
-                    varianceCtx.moveTo(x, y);
-                } else {
-                    varianceCtx.lineTo(x, y);
-                }
-            }
+            variances.forEach((variance, i) => {
+                varianceCtx.lineTo((i / maxSteps) * varianceCanvas.width, (1 - (variance / maxVariance)) * varianceCanvas.height / 2);
+            });
             varianceCtx.stroke();
         }
 
-        runSimulationButton.addEventListener('click', () => {
+        // Run simulation when button is clicked
+        runSimulationButton.addEventListener('click', function () {
             const steps = parseInt(document.getElementById('steps').value);
             const numPaths = parseInt(document.getElementById('paths').value);
             const dt = parseFloat(document.getElementById('time-step').value);
             const jumpProb = parseFloat(document.getElementById('jump-prob').value);
 
             const { paths, means, variances } = simulateRandomWalk(steps, dt, numPaths, jumpProb);
-            plotResults(paths, steps);
-            plotMean(means, steps);
-            plotVariance(variances, steps);
 
-            downloadButton.style.display = 'inline-block'; // Show download button
+            drawPaths(paths);
+            drawMean(means);
+            drawVariance(variances);
+
+            downloadButton.style.display = 'inline';
+            // Funzione per aggiungere etichette agli assi X e Y
+function drawAxisLabels(ctx, canvas, xlabel, ylabel) {
+    ctx.font = "16px Arial";
+    ctx.fillStyle = "#000"; // Colore nero per il testo
+
+    // Etichetta asse X (posizionata al centro in basso)
+    ctx.fillText(xlabel, canvas.width / 2 - 30, canvas.height - 10);
+
+    // Etichetta asse Y (posizionata in alto a sinistra e ruotata)
+    ctx.save(); // Salva il contesto corrente
+    ctx.translate(20, canvas.height / 2); // Trasla il contesto
+    ctx.rotate(-Math.PI / 2); // Ruota il contesto per posizionare il testo verticalmente
+    ctx.fillText(ylabel, -canvas.height / 2 + 30, -5);
+    ctx.restore(); // Ripristina il contesto originale
+    }
+
+    // Funzione per disegnare i percorsi con le etichette degli assi
+    function drawPaths(paths) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        const maxSteps = paths[0].length - 1;
+        const maxAbsValue = Math.max(...paths.map(path => Math.max(...path.map(Math.abs))));
+
+        ctx.beginPath();
+        paths.forEach(path => {
+            ctx.moveTo(0, canvas.height / 2);
+            path.forEach((y, i) => {
+                ctx.lineTo((i / maxSteps) * canvas.width, (1 - (y / maxAbsValue)) * canvas.height / 2);
+            });
+        });
+        ctx.stroke();
+
+        // Aggiungi le etichette per asse X e Y
+        drawAxisLabels(ctx, canvas, "Time Steps", "Position");
+    }
+
+    // Funzione per disegnare la traiettoria media con le etichette degli assi
+    function drawMean(means) {
+        meanCtx.clearRect(0, 0, meanCanvas.width, meanCanvas.height);
+        const maxSteps = means.length - 1;
+        const maxAbsValue = Math.max(...means.map(Math.abs));
+
+        meanCtx.beginPath();
+        means.forEach((mean, i) => {
+            meanCtx.lineTo((i / maxSteps) * meanCanvas.width, (1 - (mean / maxAbsValue)) * meanCanvas.height / 2);
+        });
+        meanCtx.stroke();
+
+        // Aggiungi le etichette per asse X e Y
+        drawAxisLabels(meanCtx, meanCanvas, "Time Steps", "Mean Position");
+    }
+
+    // Funzione per disegnare la varianza con le etichette degli assi
+    function drawVariance(variances) {
+        varianceCtx.clearRect(0, 0, varianceCanvas.width, varianceCanvas.height);
+        const maxSteps = variances.length - 1;
+        const maxVariance = Math.max(...variances);
+
+        varianceCtx.beginPath();
+        variances.forEach((variance, i) => {
+            varianceCtx.lineTo((i / maxSteps) * varianceCanvas.width, (1 - (variance / maxVariance)) * varianceCanvas.height / 2);
+        });
+        varianceCtx.stroke();
+
+        // Aggiungi le etichette per asse X e Y
+        drawAxisLabels(varianceCtx, varianceCanvas, "Time Steps", "Variance");
+    }
+
         });
 
-        downloadButton.addEventListener('click', () => {
-            // Implement download functionality here
-            alert('Download feature coming soon!');
-        });
     </script>
 </body>
 
