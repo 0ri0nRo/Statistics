@@ -1,302 +1,165 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Random Walk with Continuous Jumps - Homework 3</title>
+    <title>Random Walk Simulation with Continuous Jumps</title>
     <style>
         body {
-            font-family: 'Arial', sans-serif;
-            line-height: 1.6;
-            margin: 30px;
-            background-color: #f9f9f9;
-            color: #333;
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f4f4f4;
         }
-
-        h1,
-        h2,
-        h3 {
-            color: #003366;
-            margin-top: 20px;
-            margin-bottom: 10px;
-        }
-
-        p {
-            margin: 10px 0;
-            text-align: justify;
-        }
-
-        code {
-            background-color: #e0e0e0;
-            padding: 2px 5px;
-            border-radius: 3px;
-        }
-
         .container {
-            margin-top: 30px;
+            margin-bottom: 20px;
         }
-
-        .input-group {
-            margin: 10px 0;
-        }
-
         label {
             display: inline-block;
             width: 150px;
         }
-
         input[type="number"] {
-            width: 80px;
-            padding: 5px;
+            width: 100px;
         }
-
         button {
-            padding: 10px 15px;
+            padding: 10px 20px;
             background-color: #4CAF50;
             color: white;
             border: none;
             cursor: pointer;
         }
-
         button:hover {
             background-color: #45a049;
         }
-
-        #plot-canvas,
-        #mean-canvas,
-        #variance-canvas {
-            margin-top: 30px;
-            border: 1px solid #ccc;
-            max-width: 100%;
-        }
-
-        .graph-title {
-            background-color: #4A90E2;
-            color: white;
-            padding: 10px;
-            text-align: center;
-            border-radius: 5px;
-            margin-bottom: 10px;
-            font-size: 24px;
-            font-weight: bold;
-        }
-
-        .explanation-box {
-            background-color: #e6f7ff;
-            border-left: 6px solid #2196F3;
-            margin: 20px 0;
-            padding: 10px;
-        }
-
-        .explanation-box h3 {
-            color: #003366;
-        }
-
-        .explanation-box p {
-            font-size: 14px;
+        canvas {
+            border: 1px solid black;
+            margin-top: 20px;
         }
     </style>
 </head>
-
 <body>
 
-    <h1>Homework 3: Random Walk Simulation with Continuous Jumps</h1>
-
-    <!-- Theory/Research Section -->
-    <div class="explanation-box">
-        <h2>Theory/Research: Median and Location Statistics</h2>
-
-        <h3>Why the Median Minimizes the Sum of Absolute Deviations</h3>
-        <p>
-            The median minimizes the sum of absolute deviations, i.e., the function
-            <code>∑ |x(i) - c|</code>, because it is the point that equally balances the distances
-            from the left and right halves of a sorted distribution. Any movement of <code>c</code>
-            away from the median would increase the overall sum of the absolute deviations, since the
-            function is not differentiable but has a kink at the median. Formally, for a sorted dataset,
-            the median minimizes the sum of absolute deviations.
-        </p>
-
-        <h3>Different Ways to Define Location Statistics</h3>
-        <p>
-            Location statistics, or measures of central tendency, are used to describe the "center" of a distribution.
-            Common examples include:
-        </p>
-        <ul>
-            <li><b>Mean:</b> The arithmetic average, minimizing the sum of squared deviations.</li>
-            <li><b>Median:</b> The middle value, minimizing the sum of absolute deviations.</li>
-            <li><b>Mode:</b> The most frequent value in a distribution.</li>
-            <li><b>Geometric Mean:</b> The central tendency of multiplicative processes, used for data
-                in exponential growth or decay.</li>
-            <li><b>Harmonic Mean:</b> Used in averaging rates, emphasizing smaller values.</li>
-            <li><b>Trimmed Mean:</b> The mean after removing outliers, providing robustness against extreme values.</li>
-        </ul>
-        <p>
-            These definitions can be generalized, and other measures such as quantiles, weighted means,
-            or custom aggregation methods could also be considered location statistics.
-        </p>
-    </div>
-
-    <h2>2. Continuous-Time Simulation with Random Jumps</h2>
-    <p>
-        This simulation generates random walks where jumps (representing "attacks") can happen continuously over time.
-        The time window is subdivided into infinitesimal intervals, and each interval has a probability of a jump (success)
-        governed by a parameter <code>Lambda</code>, which represents the expected number of jumps within the time window.
-    </p>
-
+    <h1>Random Walk Simulation with Continuous Jumps</h1>
     <div class="container">
-        <div class="input-group">
-            <label for="steps">Number of Steps:</label>
-            <input type="number" id="steps" value="100" min="10" max="1000">
-        </div>
-        <div class="input-group">
-            <label for="paths">Number of Paths:</label>
-            <input type="number" id="paths" value="10" min="1" max="100">
-        </div>
-        <div class="input-group">
-            <label for="time-step">Time Step (Δt):</label>
-            <input type="number" id="time-step" value="0.01" min="0.001" max="1" step="0.001">
-        </div>
-        <div class="input-group">
-            <label for="Lambda">Rate of Attack (Λ):</label>
-            <input type="number" id="Lambda" value="2.0" min="0.1" max="10.0" step="0.1">
-        </div>
-        <button id="run-simulation">Run Simulation</button>
+        <label for="steps">Number of Steps:</label>
+        <input type="number" id="steps" value="100"><br>
+        
+        <label for="hackers">Number of Paths:</label>
+        <input type="number" id="hackers" value="10"><br>
+        
+        <label for="lambda">Lambda (Rate of Attack):</label>
+        <input type="number" id="lambda" value="2.0" step="0.1"><br>
+        
+        <label for="timeT">Time T (End Time):</label>
+        <input type="number" id="timeT" value="10"><br><br>
+        
+        <button id="runSimulation">Run Simulation</button>
     </div>
 
-    <div id="results">
-        <h2 class="graph-title">Simulation Output</h2>
-        <canvas id="plot-canvas" width="800" height="400"></canvas>
-
-        <h2 class="graph-title">Mean Trajectories</h2>
-        <canvas id="mean-canvas" width="800" height="400"></canvas>
-
-        <h2 class="graph-title">Variance Trajectories</h2>
-        <canvas id="variance-canvas" width="800" height="400"></canvas>
-
-        <button id="downloadBtn" style="display: none;">Download Results</button>
-    </div>
-
-    <!-- Explanation Box for Continuous-Time Simulation -->
-    <div class="explanation-box">
-        <h3>Continuous-Time Simulation with Jumps</h3>
-        <p>
-            In this simulation, we approximate a continuous-time process by subdividing the time window into small intervals.
-            At each time interval, there is a probability of a +1 jump (attack success) based on the parameter <code>Λ</code>,
-            which defines the rate of attack. The jump probability for each interval is <code>Λ * Δt</code>.
-        </p>
-    </div>
+    <canvas id="graphCanvas" width="800" height="400"></canvas>
 
     <script>
-        const canvas = document.getElementById('plot-canvas');
-        const meanCanvas = document.getElementById('mean-canvas');
-        const varianceCanvas = document.getElementById('variance-canvas');
+        const canvas = document.getElementById('graphCanvas');
         const ctx = canvas.getContext('2d');
-        const meanCtx = meanCanvas.getContext('2d');
-        const varianceCtx = varianceCanvas.getContext('2d');
-        const runSimulationButton = document.getElementById('run-simulation');
-        const downloadButton = document.getElementById('downloadBtn');
 
-        // Function to generate random numbers from a Gaussian (normal) distribution
+        // Function to generate random numbers for Gaussian distribution
         function gaussianRandom(mean = 0, stdev = 1) {
-            let u = 1 - Math.random();
+            let u = 1 - Math.random(); // U[0,1) random number
             let v = Math.random();
             let z = Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
             return z * stdev + mean;
         }
 
-        // Function to simulate jumps based on Lambda
-        function continuousJump(lambda, dt) {
-            return Math.random() < lambda * dt ? 1 : 0;
+        // Function to simulate continuous jumps based on Lambda
+        function continuousJump(lambda, t) {
+            return Math.random() < lambda / t ? 1 : 0;
         }
 
-        // Random walk simulation with continuous-time jumps
-        function simulateRandomWalk(steps, dt, numPaths, lambda) {
-            let paths = [];
-            let means = new Array(steps + 1).fill(0);
-            let variances = new Array(steps + 1).fill(0);
-            let counts = new Array(steps + 1).fill(0);
+        // Function to simulate the random walk with jumps
+        function simulateRandomWalk(steps, hackers, lambda, timeT) {
+            let stepX = canvas.width / steps;
+            let stepY = canvas.height / steps;
 
-            for (let j = 0; j < numPaths; j++) {
-                let path = [0];
-                for (let i = 1; i <= steps; i++) {
-                    let prevValue = path[i - 1];
-                    let dW = gaussianRandom(0, Math.sqrt(dt)); // Brownian motion increment
-                    let jump = continuousJump(lambda, dt);    // Attack jump
-                    let newValue = prevValue + dW + jump;     // Random walk with jump
-                    path.push(newValue);
-
-                    // Calculate mean and variance
-                    means[i] += newValue;
-                    variances[i] += newValue ** 2;
-                    counts[i]++;
-                }
-                paths.push(path);
-            }
-
-            // Normalize means and variances
-            for (let i = 0; i <= steps; i++) {
-                means[i] /= numPaths;
-                variances[i] = (variances[i] / numPaths) - (means[i] ** 2);
-            }
-
-            return { paths, means, variances };
-        }
-
-        // Plot function for random walks
-        function plotPaths(paths) {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.beginPath();
-            paths.forEach(path => {
-                ctx.moveTo(0, canvas.height / 2);
-                path.forEach((value, index) => {
-                    let x = (index / path.length) * canvas.width;
-                    let y = (canvas.height / 2) - (value * 20);
-                    ctx.lineTo(x, y);
-                });
-            });
-            ctx.stroke();
+            ctx.strokeStyle = 'black';
+            ctx.lineWidth = 1;
+
+            let totalPoints = [];
+            let totalTPoints = [];
+
+            for (let i = 0; i < hackers; i++) {
+                let x = 0;
+                let y = canvas.height - 10;
+                let points = 0;
+                let tPoints = 0;
+
+                ctx.beginPath();
+                ctx.moveTo(x, y);
+
+                for (let j = 1; j <= steps; j++) {
+                    let step = Math.random() < lambda / j ? 1 : 0;
+                    let dy = stepY * step;
+                    y -= dy;
+
+                    let nextX = j * stepX;
+                    ctx.lineTo(nextX, y);
+
+                    points += step;
+
+                    if (j <= timeT) {
+                        tPoints += step;
+                    }
+                }
+
+                ctx.stroke();
+                totalPoints.push(points);
+                totalTPoints.push(tPoints);
+            }
+
+            return { totalPoints, totalTPoints };
         }
 
-        // Plot mean values
-        function plotMean(meanValues) {
-            meanCtx.clearRect(0, 0, meanCanvas.width, meanCanvas.height);
-            meanCtx.beginPath();
-            meanCtx.moveTo(0, meanCanvas.height / 2);
-            meanValues.forEach((value, index) => {
-                let x = (index / meanValues.length) * meanCanvas.width;
-                let y = (meanCanvas.height / 2) - (value * 20);
-                meanCtx.lineTo(x, y);
-            });
-            meanCtx.stroke();
+        // Function to draw histogram
+        function drawHistogram(data, xStart, yStart, stepY, width) {
+            let maxCount = Math.max(...data);
+            let binWidth = width / data.length;
+
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+            for (let i = 0; i < data.length; i++) {
+                let binHeight = (data[i] / maxCount) * (canvas.height / 2);
+                ctx.fillRect(xStart + i * binWidth, yStart - binHeight, binWidth, binHeight);
+            }
         }
 
-        // Plot variance values
-        function plotVariance(varianceValues) {
-            varianceCtx.clearRect(0, 0, varianceCanvas.width, varianceCanvas.height);
-            varianceCtx.beginPath();
-            varianceCtx.moveTo(0, varianceCanvas.height / 2);
-            varianceValues.forEach((value, index) => {
-                let x = (index / varianceValues.length) * varianceCanvas.width;
-                let y = (varianceCanvas.height / 2) - (value * 200);
-                varianceCtx.lineTo(x, y);
-            });
-            varianceCtx.stroke();
+        // Function to draw the histograms
+        function plotHistograms(steps, totalPoints, totalTPoints) {
+            let pointsHistogram = new Array(steps + 1).fill(0);
+            let tPointsHistogram = new Array(steps + 1).fill(0);
+
+            totalPoints.forEach(val => pointsHistogram[val]++);
+            totalTPoints.forEach(val => tPointsHistogram[val]++);
+
+            // Draw left histogram
+            let xStartLeft = 10;
+            let widthLeft = canvas.width * 0.2;
+            let yStart = canvas.height - 10;
+
+            drawHistogram(pointsHistogram, xStartLeft, yStart, steps, widthLeft);
+
+            // Draw right histogram
+            let xStartRight = canvas.width - widthLeft - 10;
+            drawHistogram(tPointsHistogram, xStartRight, yStart, steps, widthLeft);
         }
 
-        runSimulationButton.addEventListener('click', () => {
+        // Event listener to run simulation on button click
+        document.getElementById('runSimulation').addEventListener('click', () => {
             const steps = parseInt(document.getElementById('steps').value);
-            const paths = parseInt(document.getElementById('paths').value);
-            const dt = parseFloat(document.getElementById('time-step').value);
-            const lambda = parseFloat(document.getElementById('Lambda').value);
+            const hackers = parseInt(document.getElementById('hackers').value);
+            const lambda = parseFloat(document.getElementById('lambda').value);
+            const timeT = parseInt(document.getElementById('timeT').value);
 
-            const { paths: pathData, means, variances } = simulateRandomWalk(steps, dt, paths, lambda);
-
-            plotPaths(pathData);
-            plotMean(means);
-            plotVariance(variances);
+            const { totalPoints, totalTPoints } = simulateRandomWalk(steps, hackers, lambda, timeT);
+            plotHistograms(steps, totalPoints, totalTPoints);
         });
     </script>
 </body>
-
 </html>
