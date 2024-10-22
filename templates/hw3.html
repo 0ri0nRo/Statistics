@@ -86,6 +86,7 @@
             let totalPoints = [];
             let totalTPoints = [];
 
+            // Loop for each hacker (path)
             for (let i = 0; i < hackers; i++) {
                 let x = 0;
                 let y = canvas.height - 10;
@@ -95,18 +96,20 @@
                 ctx.beginPath();
                 ctx.moveTo(x, y);
 
+                // Loop for each step in the random walk
                 for (let j = 1; j <= steps; j++) {
-                    let step = Math.random() < lambda / j ? 1 : 0;
+                    // Simulate random jump with given lambda
+                    let step = Math.random() < lambda / steps ? 1 : 0;
                     let dy = stepY * step;
                     y -= dy;
 
                     let nextX = j * stepX;
                     ctx.lineTo(nextX, y);
 
-                    points += step;
+                    points += step; // Count total jumps
 
                     if (j <= timeT) {
-                        tPoints += step;
+                        tPoints += step; // Count jumps within time T
                     }
                 }
 

@@ -12,7 +12,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Espone la porta 5000
-EXPOSE 5000
+EXPOSE 4000
 
 # Comando per avviare l'app
 CMD ["python", "app.py"]
