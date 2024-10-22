@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Random Walk Simulation with Continuous Jumps</title>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -35,6 +37,16 @@
             background-color: #fff;
             margin-top: 20px;
         }
+        h2 {
+            margin-top: 40px;
+        }
+        .theory {
+            margin-top: 20px;
+            background-color: #ffffff;
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
     </style>
 </head>
 <body>
@@ -57,6 +69,51 @@
     </div>
 
     <canvas id="graphCanvas" width="800" height="400"></canvas>
+
+    <div class="theory">
+        <h2>Theory on Location Statistics</h2>
+        <p>
+            In statistics, a <strong>location statistic</strong> (or measure of central tendency) summarizes a set of data by identifying the central position within that dataset. Common measures include the mean, median, and mode.
+        </p>
+        
+        <h3>Why the Median Minimizes the Sum of Absolute Deviations</h3>
+        <p>
+            Consider a set of data points \( x_1, x_2, \ldots, x_n \) and a candidate location statistic \( c \). The goal is to minimize the sum of absolute deviations:
+        </p>
+        <p>
+            \[
+            S(c) = \sum_{i=1}^{n} |x_i - c|
+            \]
+        </p>
+        <p>
+            To find the optimal \( c \), we can use calculus and the properties of the absolute function. The median \( m \) is defined such that half the data points are less than \( m \) and half are greater than \( m \).
+        </p>
+        <p>
+            It can be shown that if \( c \) is less than the median, increasing \( c \) will decrease \( S(c) \) until \( c \) reaches the median. Conversely, if \( c \) is greater than the median, decreasing \( c \) will decrease \( S(c) \). Therefore, the median minimizes the sum of absolute deviations:
+        </p>
+        <p>
+            \[
+            \text{Median} = \arg\min_{c} S(c)
+            \]
+        </p>
+
+        <h3>Defining Location Statistics</h3>
+        <p>
+            Different conceptual definitions of "location" statistics include:
+        </p>
+        <ul>
+            <li><strong>Mean:</strong> The arithmetic average, given by \( \bar{x} = \frac{1}{n} \sum_{i=1}^{n} x_i \).</li>
+            <li><strong>Median:</strong> The middle value when the data is sorted.</li>
+            <li><strong>Mode:</strong> The most frequently occurring value in the dataset.</li>
+            <li><strong>Weighted Mean:</strong> Where each data point has a different weight: \( \bar{x} = \frac{\sum_{i=1}^{n} w_i x_i}{\sum_{i=1}^{n} w_i} \).</li>
+            <li><strong>Trimean:</strong> A combination of the mean and median, calculated as: \( \text{Trimean} = \frac{Q_1 + 2 \times \text{Median} + Q_3}{4} \), where \( Q_1 \) and \( Q_3 \) are the first and third quartiles.</li>
+            <li><strong>Geometric Mean:</strong> The nth root of the product of the data points, often used for multiplicative processes.</li>
+            <li><strong>Harmonic Mean:</strong> The reciprocal of the arithmetic mean of the reciprocals, useful for rates.</li>
+        </ul>
+        <p>
+            These definitions can be generalized and combined in various ways to create new measures of central tendency, leading to potentially infinite other definitions based on the context and characteristics of the data.
+        </p>
+    </div>
 
     <script>
         const canvas = document.getElementById('graphCanvas');
