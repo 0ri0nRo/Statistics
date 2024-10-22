@@ -31,7 +31,8 @@
             background-color: #45a049;
         }
         canvas {
-            border: 1px solid black;
+            border: 2px solid #ccc;
+            background-color: #fff;
             margin-top: 20px;
         }
     </style>
@@ -43,7 +44,7 @@
         <label for="steps">Number of Steps:</label>
         <input type="number" id="steps" value="100"><br>
         
-        <label for="hackers">Number of Paths:</label>
+        <label for="hackers">Number of Hackers:</label>
         <input type="number" id="hackers" value="10"><br>
         
         <label for="lambda">Lambda (Rate of Attack):</label>
@@ -61,9 +62,17 @@
         const canvas = document.getElementById('graphCanvas');
         const ctx = canvas.getContext('2d');
 
+        // Function to generate a random color
+        function randomColor() {
+            const r = Math.floor(Math.random() * 255);
+            const g = Math.floor(Math.random() * 255);
+            const b = Math.floor(Math.random() * 255);
+            return `rgba(${r},${g},${b},0.8)`;
+        }
+
         // Function to generate random numbers for Gaussian distribution
         function gaussianRandom(mean = 0, stdev = 1) {
-            let u = 1 - Math.random(); // U[0,1) random number
+            let u = 1 - Math.random();
             let v = Math.random();
             let z = Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
             return z * stdev + mean;
@@ -80,8 +89,6 @@
             let stepY = canvas.height / steps;
 
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.strokeStyle = 'black';
-            ctx.lineWidth = 1;
 
             let totalPoints = [];
             let totalTPoints = [];
@@ -93,12 +100,17 @@
                 let points = 0;
                 let tPoints = 0;
 
+                // Generate a random color for each path
+                let color = randomColor();
+
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 2;
+
                 ctx.beginPath();
                 ctx.moveTo(x, y);
 
                 // Loop for each step in the random walk
                 for (let j = 1; j <= steps; j++) {
-                    // Simulate random jump with given lambda
                     let step = Math.random() < lambda / steps ? 1 : 0;
                     let dy = stepY * step;
                     y -= dy;
@@ -121,12 +133,17 @@
             return { totalPoints, totalTPoints };
         }
 
-        // Function to draw histogram
-        function drawHistogram(data, xStart, yStart, stepY, width) {
+        // Function to draw gradient histogram
+        function drawHistogram(data, xStart, yStart, stepY, width, gradientColorStart, gradientColorEnd) {
             let maxCount = Math.max(...data);
             let binWidth = width / data.length;
 
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+            let gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            gradient.addColorStop(0, gradientColorStart);
+            gradient.addColorStop(1, gradientColorEnd);
+
+            ctx.fillStyle = gradient;
+
             for (let i = 0; i < data.length; i++) {
                 let binHeight = (data[i] / maxCount) * (canvas.height / 2);
                 ctx.fillRect(xStart + i * binWidth, yStart - binHeight, binWidth, binHeight);
@@ -141,16 +158,16 @@
             totalPoints.forEach(val => pointsHistogram[val]++);
             totalTPoints.forEach(val => tPointsHistogram[val]++);
 
-            // Draw left histogram
+            // Draw left histogram (total points)
             let xStartLeft = 10;
             let widthLeft = canvas.width * 0.2;
             let yStart = canvas.height - 10;
 
-            drawHistogram(pointsHistogram, xStartLeft, yStart, steps, widthLeft);
+            drawHistogram(pointsHistogram, xStartLeft, yStart, steps, widthLeft, '#2196F3', '#E3F2FD');
 
-            // Draw right histogram
+            // Draw right histogram (points within time T)
             let xStartRight = canvas.width - widthLeft - 10;
-            drawHistogram(tPointsHistogram, xStartRight, yStart, steps, widthLeft);
+            drawHistogram(tPointsHistogram, xStartRight, yStart, steps, widthLeft, '#F44336', '#FFCDD2');
         }
 
         // Event listener to run simulation on button click
