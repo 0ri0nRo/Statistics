@@ -60,7 +60,7 @@
         <input type="number" id="hackers" value="10"><br>
         
         <label for="lambda">Lambda (Rate of Attack):</label>
-        <input type="number" id="lambda" value="2.0" step="0.1"><br>
+        <input type="number" id="lambda" value="70" step="1"><br>
         
         <label for="timeT">Time T (End Time):</label>
         <input type="number" id="timeT" value="10"><br><br>
@@ -75,7 +75,6 @@
         <p>
             In statistics, a <strong>location statistic</strong> (or measure of central tendency) summarizes a set of data by identifying the central position within that dataset. Common measures include the mean, median, and mode.
         </p>
-        
         <h3>Why the Median Minimizes the Sum of Absolute Deviations</h3>
         <p>
             Consider a set of data points \( x_1, x_2, \ldots, x_n \) and a candidate location statistic \( c \). The goal is to minimize the sum of absolute deviations:
@@ -127,19 +126,6 @@
             return `rgba(${r},${g},${b},0.8)`;
         }
 
-        // Function to generate random numbers for Gaussian distribution
-        function gaussianRandom(mean = 0, stdev = 1) {
-            let u = 1 - Math.random();
-            let v = Math.random();
-            let z = Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
-            return z * stdev + mean;
-        }
-
-        // Function to simulate continuous jumps based on Lambda
-        function continuousJump(lambda, t) {
-            return Math.random() < lambda / t ? 1 : 0;
-        }
-
         // Function to simulate the random walk with jumps
         function simulateRandomWalk(steps, hackers, lambda, timeT) {
             let stepX = canvas.width / steps;
@@ -148,14 +134,10 @@
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
             let totalPoints = [];
-            let totalTPoints = [];
 
             // Loop for each hacker (path)
             for (let i = 0; i < hackers; i++) {
-                let x = 0;
                 let y = canvas.height - 10;
-                let points = 0;
-                let tPoints = 0;
 
                 // Generate a random color for each path
                 let color = randomColor();
@@ -164,7 +146,7 @@
                 ctx.lineWidth = 2;
 
                 ctx.beginPath();
-                ctx.moveTo(x, y);
+                ctx.moveTo(0, y);
 
                 // Loop for each step in the random walk
                 for (let j = 1; j <= steps; j++) {
@@ -174,57 +156,48 @@
 
                     let nextX = j * stepX;
                     ctx.lineTo(nextX, y);
-
-                    points += step; // Count total jumps
-
-                    if (j <= timeT) {
-                        tPoints += step; // Count jumps within time T
-                    }
                 }
 
                 ctx.stroke();
-                totalPoints.push(points);
-                totalTPoints.push(tPoints);
+                totalPoints.push(y); // Use y position as a data point
             }
 
-            return { totalPoints, totalTPoints };
+            return { totalPoints };
         }
 
-        // Function to draw gradient histogram
-        function drawHistogram(data, xStart, yStart, stepY, width, gradientColorStart, gradientColorEnd) {
-            let maxCount = Math.max(...data);
-            let binWidth = width / data.length;
+        // Function to draw histogram
+        function drawHistogram(data, xStart, yStart, height, stepX, brushColor, penColor) {
+            const maxCount = Math.max(...data);
+            const barHeight = height / data.length;
 
-            let gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-            gradient.addColorStop(0, gradientColorStart);
-            gradient.addColorStop(1, gradientColorEnd);
+            ctx.fillStyle = brushColor;
+            ctx.strokeStyle = penColor;
 
-            ctx.fillStyle = gradient;
-
+            // Draw bars for the histogram
             for (let i = 0; i < data.length; i++) {
-                let binHeight = (data[i] / maxCount) * (canvas.height / 2);
-                ctx.fillRect(xStart + i * binWidth, yStart - binHeight, binWidth, binHeight);
+                const barWidth = (data[i] / maxCount) * (canvas.height * 0.8); // Scale to 80% of canvas height
+                ctx.fillRect(xStart, yStart - (i + 1) * barHeight, barWidth, barHeight);
+                ctx.strokeRect(xStart, yStart - (i + 1) * barHeight, barWidth, barHeight);
             }
         }
 
-        // Function to draw the histograms
-        function plotHistograms(steps, totalPoints, totalTPoints) {
-            let pointsHistogram = new Array(steps + 1).fill(0);
-            let tPointsHistogram = new Array(steps + 1).fill(0);
+        // Function to plot histograms
+        function plotHistograms(steps, totalPoints) {
+            let histogramData = new Array(steps + 1).fill(0);
 
-            totalPoints.forEach(val => pointsHistogram[val]++);
-            totalTPoints.forEach(val => tPointsHistogram[val]++);
+            totalPoints.forEach(val => histogramData[Math.floor(val / (canvas.height / steps))]++);
 
-            // Draw left histogram (total points)
-            let xStartLeft = 10;
-            let widthLeft = canvas.width * 0.2;
-            let yStart = canvas.height - 10;
+            // Draw histogram on the left
+            const yStartLeft = canvas.height - 10;
+            const xStartLeft = 10;
+            const heightLeft = canvas.height * 0.8; // Height of the left histogram
+            drawHistogram(histogramData, xStartLeft, yStartLeft, heightLeft, 10, '#2196F3', '#E3F2FD');
 
-            drawHistogram(pointsHistogram, xStartLeft, yStart, steps, widthLeft, '#2196F3', '#E3F2FD');
-
-            // Draw right histogram (points within time T)
-            let xStartRight = canvas.width - widthLeft - 10;
-            drawHistogram(tPointsHistogram, xStartRight, yStart, steps, widthLeft, '#F44336', '#FFCDD2');
+            // Draw histogram on the right
+            const yStartRight = canvas.height - 10;
+            const xStartRight = canvas.width - 10; // Right aligned
+            const heightRight = canvas.height * 0.8; // Height of the right histogram
+            drawHistogram(histogramData, xStartRight - 10, yStartRight, heightRight, 10, '#F44336', '#FFCDD2');
         }
 
         // Event listener to run simulation on button click
@@ -234,8 +207,8 @@
             const lambda = parseFloat(document.getElementById('lambda').value);
             const timeT = parseInt(document.getElementById('timeT').value);
 
-            const { totalPoints, totalTPoints } = simulateRandomWalk(steps, hackers, lambda, timeT);
-            plotHistograms(steps, totalPoints, totalTPoints);
+            const { totalPoints } = simulateRandomWalk(steps, hackers, lambda, timeT);
+            plotHistograms(steps, totalPoints);
         });
     </script>
 </body>
