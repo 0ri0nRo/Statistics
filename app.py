@@ -18,5 +18,9 @@ def hw2():
 def hw3():
     return render_template('hw3.html')
 
+@app.route('/hw4')
+def hw4():
+    return render_template('hw4.html')
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=4000, debug=True)

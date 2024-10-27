@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wiener Process Simulation with Continuous Jumps</title>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            margin-bottom: 20px;
+        }
+        label {
+            display: inline-block;
+            width: 200px;
+        }
+        input[type="number"] {
+            width: 100px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        canvas {
+            border: 2px solid #ccc;
+            background-color: #fff;
+            margin-top: 20px;
+            display: block;
+        }
+        .theory {
+            margin-top: 20px;
+            background-color: #ffffff;
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Wiener Process Simulation with Continuous Jumps</h1>
+    <div class="container">
+        <label for="n-subintervals">Number of Subintervals (n):</label>
+        <input type="number" id="n-subintervals" value="500" min="10" max="10000"><br>
+        
+        <label for="lambda">Lambda (Rate of Attacks):</label>
+        <input type="number" id="lambda" value="0.5" step="0.1"><br><br>
+        
+        <button id="runSimulation">Run Simulation</button>
+    </div>
+
+    <canvas id="canvas" width="800" height="400"></canvas>
+
+    <div class="theory">
+        <h2>Theory on Wiener Process and Statistical Independence</h2>
+        <p>
+            The <strong>Wiener process</strong>, also known as Brownian motion, is a continuous-time stochastic process with independent, normally distributed increments. It is often used to model random phenomena in various fields.
+        </p>
+        <p>
+            The Wiener process can be approximated by a <strong>random walk</strong> with smaller and smaller steps. Each step in this approximation follows a distribution with a mean of zero and variance proportional to the step size \( dt \).
+        </p>
+        <h3>Statistical Independence in Random Walks</h3>
+        <p>
+            In a random walk, each step is taken independently of the others. Mathematically, this is expressed as follows: for events \( A \) and \( B \), independence implies:
+        </p>
+        <p>
+            \[
+            P(A \cap B) = P(A) \cdot P(B)
+            \]
+        </p>
+        <p>
+            This concept of statistical independence ensures that the random walk remains unbiased over time, and its distribution approaches that of the Wiener process.
+        </p>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        function startSimulation() {
+            const n_subintervals = parseInt(document.getElementById('n-subintervals').value);
+            const lambda = parseFloat(document.getElementById('lambda').value);
+            const dt = 1 / n_subintervals;
+
+            let currentPosition = 0;
+            const wienerProcessValues = [currentPosition];
+
+            for (let i = 1; i <= n_subintervals; i++) {
+                let step = (Math.random() < 0.5 ? 1 : -1) * Math.sqrt(dt);
+                currentPosition += step;
+                wienerProcessValues.push(currentPosition);
+            }
+
+            plotWienerProcess(wienerProcessValues, n_subintervals);
+        }
+
+        function plotWienerProcess(wienerProcessValues, n_subintervals) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const timeStepWidth = canvas.width / n_subintervals;
+            const centerY = canvas.height / 2;
+            const scale = canvas.height / 4;
+
+            ctx.strokeStyle = '#4CAF50';
+            ctx.beginPath();
+            ctx.moveTo(0, centerY);
+
+            for (let i = 1; i < wienerProcessValues.length; i++) {
+                const x = i * timeStepWidth;
+                const y = centerY - wienerProcessValues[i] * scale;
+                ctx.lineTo(x, y);
+            }
+
+            ctx.stroke();
+        }
+
+        document.getElementById('runSimulation').addEventListener('click', startSimulation);
+    </script>
+</body>
+</html>
