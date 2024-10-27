@@ -3,104 +3,158 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cybersecurity Course - Statistics</title>
+    <title>Cybersecurity Master's Blog - Statistics</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <style>
-        body {
-            font-family: 'Roboto', sans-serif;
-            line-height: 1.6;
+        /* Base Styling */
+        * {
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
             background-color: #f4f4f4;
+            color: #333;
             display: flex;
             flex-direction: column;
             min-height: 100vh;
+            line-height: 1.6;
         }
 
+        /* Main container */
         .container {
-            flex: 1;
-            max-width: 800px;
-            margin: 20px auto;
+            max-width: 1000px;
+            width: 90%;
+            margin: 0 auto;
             padding: 20px;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            margin-top: 20px;
+            flex-grow: 1;
         }
 
+        /* Header Styling */
         header {
             text-align: center;
             margin-bottom: 20px;
         }
 
         header h1 {
-            color: #333;
-            font-size: 2.5em;
-            margin-bottom: 10px;
+            font-size: 2em;
+            color: #2c3e50;
+            margin-bottom: 0.5em;
         }
 
         header p {
+            font-size: 1.1em;
             color: #555;
-            font-size: 1.2em;
         }
 
+        /* Navigation Styling */
         nav {
+            display: flex;
+            justify-content: center;
             margin: 20px 0;
         }
 
         nav ul {
-            list-style: none;
-            padding: 0;
+            list-style-type: none;
             display: flex;
-            flex-direction: column;
-            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
         }
 
         nav ul li {
-            margin: 10px 0;
+            margin: 5px 0;
         }
 
         nav ul li a {
+            display: inline-block;
             text-decoration: none;
-            color: #0066cc;
-            font-weight: bold;
-            padding: 10px 20px;
-            border: 2px solid #0066cc;
+            color: #3498db;
+            font-weight: 500;
+            padding: 10px 15px;
+            border: 2px solid #3498db;
             border-radius: 5px;
-            transition: background-color 0.3s, color 0.3s;
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
 
         nav ul li a:hover {
-            background-color: #0066cc;
-            color: white;
+            background-color: #3498db;
+            color: #fff;
         }
 
+        /* Footer Styling */
         footer {
             text-align: center;
-            margin-top: 20px;
+            padding: 20px 0;
             font-size: 0.9em;
             color: #777;
-            padding: 10px 0;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 1.8em;
+            }
+
+            header p {
+                font-size: 1em;
+            }
+
+            nav ul {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            nav ul li a {
+                width: 100%;
+                text-align: center;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 15px;
+                margin-top: 10px;
+            }
+
+            header h1 {
+                font-size: 1.5em;
+            }
+            
+            header p {
+                font-size: 0.9em;
+            }
         }
     </style>
 </head>
 <body>
+    <!-- Main content container -->
     <div class="container">
         <header>
-            <h1>Cybersecurity Course - Statistics</h1>
-            <p>Welcome to the Cybersecurity Course. Explore the modules below.</p>
+            <h1>Cybersecurity Master's Blog - Statistics</h1>
+            <p>Welcome to the Cybersecurity Master's Blog. Dive into the modules below to explore advanced concepts.</p>
         </header>
+        
         <nav>
             <ul>
-                <li><a href="/hw1">Hw 1</a></li>
-                <li><a href="/hw2">Hw 2</a></li>
-                <li><a href="/hw3">Hw 3</a></li>
-                <li><a href="/hw4">Hw 4</a></li>
-
-                <!-- Add more links for other modules as needed -->
-                <!-- <li><a href="/module2">Module 2: ...</a></li> -->
-                <!-- <li><a href="/module3">Module 3: ...</a></li> -->
+                <li><a href="/hw1">Homework 1</a></li>
+                <li><a href="/hw2">Homework 2</a></li>
+                <li><a href="/hw3">Homework 3</a></li>
+                <li><a href="/hw4">Homework 4</a></li>
+                <!-- More modules can be added here -->
             </ul>
         </nav>
     </div>
+
+    <!-- Footer section -->
+    <footer>
+        &copy; 2024 Cybersecurity Master's Blog - All Rights Reserved.
+    </footer>
 </body>
 </html>
