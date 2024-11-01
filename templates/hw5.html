@@ -1,54 +1,169 @@
 <!DOCTYPE html>
-<html lang="it">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Work in Progress</title>
-    <style>
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background-color: #f0f0f0;
-            color: #333;
-        }
-        .container {
-            text-align: center;
-            padding: 20px;
-            border: 2px solid #333;
-            border-radius: 8px;
-            background-color: #fff;
-            box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
-        }
-        h1 {
-            color: #e74c3c;
-        }
-        p {
-            font-size: 18px;
-            margin: 10px 0;
-        }
-        .loader {
-            border: 6px solid #f3f3f3;
-            border-top: 6px solid #3498db;
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            animation: spin 1s linear infinite;
-            margin: 20px auto;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Homework Helper</title>
+<style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    section { margin-bottom: 30px; }
+    h2 { color: #333; }
+    textarea { width: 100%; height: 100px; }
+    canvas { border: 1px solid #ccc; margin-top: 10px; }
+</style>
 </head>
 <body>
-    <div class="container">
-        <h1>Work in Progress</h1>
-        <div class="loader"></div>
-    </div>
+
+<h1>Homework Helper</h1>
+
+<!-- Section 1: Cauchy-Schwarz Inequality -->
+<section id="cs-inequality">
+    <h2>Cauchy-Schwarz Inequality</h2>
+    <p>We will prove the Cauchy-Schwarz inequality in the simplest form:</p>
+    <p><strong>|⟨u, v⟩| ≤ ||u|| ||v||</strong></p>
+    <p>Try entering two vectors <code>u</code> and <code>v</code> below to see the result of the Cauchy-Schwarz inequality:</p>
+    
+    <input type="text" id="vectorU" value="1,2" placeholder="Enter vector u, e.g., 1,2">
+    <input type="text" id="vectorV" value="3,4" placeholder="Enter vector v, e.g., 3,4">
+    <button onclick="calculateCSInequality()">Check C-S Inequality</button>
+    
+    <p id="cs-result"></p>
+</section>
+
+<!-- Section 2: Independence vs. Uncorrelation -->
+<section id="independence-uncorrelation">
+    <h2>Independence vs. Uncorrelation</h2>
+    <p>Independence means that the occurrence of one event does not affect the probability of the other, while uncorrelation only implies that two variables have zero covariance and does not necessarily imply independence.</p>
+</section>
+
+<!-- Section 3: Euler-Maruyama Simulator Enhancement -->
+<section id="em-simulator">
+    <h2>Euler-Maruyama Simulator Enhancement</h2>
+    <p>Develop a generalized Euler-Maruyama simulator that can handle various types of stochastic differential equations (SDEs).</p>
+    <p>This simple simulator allows you to input drift (a) and volatility (b) terms:</p>
+    
+    <label for="initialValue">Initial Value:</label>
+    <input type="number" id="initialValue" value="1.0" placeholder="e.g., 1.0"><br>
+    
+    <label for="drift">Drift (a):</label>
+    <input type="number" id="drift" value="0.1" placeholder="e.g., 0.1"><br>
+    
+    <label for="volatility">Volatility (b):</label>
+    <input type="number" id="volatility" value="0.2" placeholder="e.g., 0.2"><br>
+    
+    <button onclick="simulateEulerMaruyama()">Run Simulation</button>
+    
+    <p id="em-result"></p>
+    <canvas id="em-canvas" width="400" height="200"></canvas>
+</section>
+
+<!-- Optional Exercise: Regression Coefficients -->
+<section id="regression-coefficients">
+    <h2>Optional: Regression Coefficients</h2>
+    <p>Calculate the regression coefficients (a and b) using the least squares method:</p>
+    
+    <label for="dataPoints">Enter data points (x, y) pairs, separated by commas:</label>
+    <input type="text" id="dataPoints" value="(1,2),(2,3),(3,5)" placeholder="e.g., (1,2),(2,3),(3,5)">
+    <button onclick="calculateRegression()">Calculate Regression Coefficients</button>
+    
+    <p id="regression-result"></p>
+    <canvas id="regression-canvas" width="400" height="200"></canvas>
+</section>
+
+<script>
+// Cauchy-Schwarz Inequality Calculation
+function calculateCSInequality() {
+    const u = document.getElementById('vectorU').value.split(',').map(Number);
+    const v = document.getElementById('vectorV').value.split(',').map(Number);
+
+    if (u.length !== v.length) {
+        document.getElementById('cs-result').innerText = "Vectors u and v must have the same length.";
+        return;
+    }
+    
+    const dotProduct = u.reduce((sum, ui, i) => sum + ui * v[i], 0);
+    const normU = Math.sqrt(u.reduce((sum, ui) => sum + ui ** 2, 0));
+    const normV = Math.sqrt(v.reduce((sum, vi) => sum + vi ** 2, 0));
+    
+    const csResult = Math.abs(dotProduct) <= normU * normV;
+    
+    document.getElementById('cs-result').innerText = `|⟨u, v⟩| = ${Math.abs(dotProduct)} ≤ ||u|| ||v|| = ${normU * normV}. Inequality holds: ${csResult}`;
+}
+
+// Euler-Maruyama Simulator with Graph
+function simulateEulerMaruyama() {
+    const initialValue = parseFloat(document.getElementById('initialValue').value);
+    const drift = parseFloat(document.getElementById('drift').value);
+    const volatility = parseFloat(document.getElementById('volatility').value);
+    
+    const steps = 10; // Number of simulation steps
+    const dt = 0.1; // Time increment
+    const results = [initialValue];
+
+    for (let i = 1; i <= steps; i++) {
+        const dW = Math.sqrt(dt) * (Math.random() * 2 - 1); // Brownian increment
+        const nextValue = results[i - 1] + drift * dt + volatility * dW;
+        results.push(nextValue);
+    }
+
+    document.getElementById('em-result').innerText = `Simulation results: ${results.join(', ')}`;
+    plotGraph(results, 'em-canvas', 'Euler-Maruyama Simulation');
+}
+
+// Plot function for line graph
+function plotGraph(data, canvasId, title) {
+    const canvas = document.getElementById(canvasId);
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.beginPath();
+    ctx.moveTo(0, canvas.height - data[0] * 10);
+    
+    data.forEach((value, index) => {
+        ctx.lineTo(index * (canvas.width / data.length), canvas.height - value * 10);
+    });
+    ctx.strokeStyle = '#4CAF50';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+}
+
+// Regression Coefficient Calculation with Scatter Plot
+function calculateRegression() {
+    const dataPoints = document.getElementById('dataPoints').value.match(/\(([^)]+)\)/g);
+    const xyPairs = dataPoints.map(point => point.slice(1, -1).split(',').map(Number));
+
+    const n = xyPairs.length;
+    const sumX = xyPairs.reduce((sum, [x]) => sum + x, 0);
+    const sumY = xyPairs.reduce((sum, [, y]) => sum + y, 0);
+    const sumXY = xyPairs.reduce((sum, [x, y]) => sum + x * y, 0);
+    const sumX2 = xyPairs.reduce((sum, [x]) => sum + x * x, 0);
+
+    const b = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX ** 2);
+    const a = (sumY - b * sumX) / n;
+    
+    document.getElementById('regression-result').innerText = `Regression coefficients: a = ${a.toFixed(2)}, b = ${b.toFixed(2)}`;
+    plotRegression(xyPairs, a, b);
+}
+
+// Plot function for scatter plot and regression line
+function plotRegression(points, a, b) {
+    const canvas = document.getElementById('regression-canvas');
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    // Scatter plot
+    points.forEach(([x, y]) => {
+        ctx.fillRect(x * 40, canvas.height - y * 40, 4, 4);
+    });
+    
+    // Regression line
+    ctx.beginPath();
+    ctx.moveTo(0, canvas.height - (a + b * 0) * 40);
+    ctx.lineTo(canvas.width, canvas.height - (a + b * 10) * 40); // Assuming x ranges from 0 to 10
+    ctx.strokeStyle = '#FF5722';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+}
+</script>
+
 </body>
 </html>
