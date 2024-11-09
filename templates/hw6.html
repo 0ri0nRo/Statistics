@@ -75,16 +75,6 @@
 
 <h1>Empirical vs Theoretical Distribution Simulation</h1>
 
-<div class="controls">
-    <h2>Simulation Controls</h2>
-    <label for="numSamples">Number of Samples:</label>
-    <input type="number" id="numSamples" value="1000" min="1" max="5000">
-    <label for="numIntervals">Number of Intervals:</label>
-    <input type="number" id="numIntervals" value="5" min="2" max="10" onchange="createIntervalInputs()">
-    <div id="intervalInputs"></div>
-    <button onclick="startSimulation()">Start Simulation</button>
-</div>
-
 <div class="theory">
     <h2>Theoretical Background</h2>
 
@@ -132,7 +122,15 @@
         Theoretically, the mean and variance of the generated samples should converge to the expected theoretical mean and variance as sample size increases. This convergence demonstrates that our empirical mean and variance are accurate estimates of the distribution’s true parameters.
     </p>
 </div>
-
+<div class="controls">
+    <h2>Simulation Controls</h2>
+    <label for="numSamples">Number of Samples:</label>
+    <input type="number" id="numSamples" value="1000" min="1" max="5000">
+    <label for="numIntervals">Number of Intervals:</label>
+    <input type="number" id="numIntervals" value="5" min="2" max="10" onchange="createIntervalInputs()">
+    <div id="intervalInputs"></div>
+    <button onclick="startSimulation()">Start Simulation</button>
+</div>
 
 <div class="output-section">
     <canvas id="graphCanvas" width="800" height="500"></canvas>
