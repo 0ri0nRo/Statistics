@@ -3,191 +3,239 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Empirical vs Theoretical Distribution with User-Defined Parameters</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<title>Empirical vs Theoretical Distribution Simulation</title>
+<style>
+    body {
+        font-family: 'Arial', sans-serif;
+        background-color: #f0f8ff;
+        margin: 0;
+        padding: 20px;
+        color: #333;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    h1, h2 {
+        color: #004d99;
+        margin-bottom: 10px;
+    }
+    h1 { font-size: 2em; }
+    h2 { font-size: 1.5em; }
+    .controls, .theory {
+        background: #e0f7fa;
+        padding: 15px;
+        border-radius: 8px;
+        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+        width: 70%;
+        margin-bottom: 20px;
+        text-align: left;
+    }
+    .controls label, .theory p {
+        font-size: 1em;
+        color: #333;
+    }
+    .controls label {
+        font-weight: bold;
+        margin-top: 10px;
+    }
+    .controls input[type="number"] {
+        padding: 8px;
+        margin: 5px 0;
+        border: 1px solid #004d99;
+        border-radius: 4px;
+        font-size: 16px;
+        width: 80px;
+    }
+    button {
+        padding: 10px 20px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+        margin-top: 15px;
+        transition: background-color 0.3s;
+    }
+    button:hover { background-color: #0056b3; }
+    canvas {
+        border: 1px solid #ccc;
+        background-color: white;
+        margin-top: 20px;
+    }
+    .output-section {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 70%;
+    }
+</style>
 </head>
 <body>
-<h1>Empirical vs Theoretical Distribution with Recursive Statistics</h1>
 
-<!-- Form for user input -->
-<div>
-    <label for="values">Values (comma-separated):</label>
-    <input type="text" id="values" value="1,2,3,4">
-</div>
-<div>
-    <label for="probabilities">Probabilities (comma-separated, must sum to 1):</label>
-    <input type="text" id="probabilities" value="0.1,0.2,0.3,0.4">
-</div>
-<div>
+<h1>Empirical vs Theoretical Distribution Simulation</h1>
+
+<div class="controls">
+    <h2>Simulation Controls</h2>
     <label for="numSamples">Number of Samples:</label>
-    <input type="number" id="numSamples" value="1000">
+    <input type="number" id="numSamples" value="1000" min="1" max="5000">
+    <label for="numIntervals">Number of Intervals:</label>
+    <input type="number" id="numIntervals" value="5" min="2" max="10" onchange="createIntervalInputs()">
+    <div id="intervalInputs"></div>
+    <button onclick="startSimulation()">Start Simulation</button>
 </div>
-<button onclick="startSimulation()">Start Simulation</button>
 
-<canvas id="distributionChart" width="800" height="400"></canvas>
-<canvas id="statsChart" width="800" height="400"></canvas>
+<div class="theory">
+    <h2>Theoretical Background</h2>
+
+    <h3>1. Fundamental Theorem of Calculus and Its Relationship to PDFs and CDFs</h3>
+    <p>
+        The <strong>Fundamental Theorem of Calculus</strong> (FTC) states that if <code>F(x)</code> is an antiderivative of a continuous function <code>f(x)</code> on an interval [a, b], then:
+    </p>
+    <p style="text-align: center;"><code>∫<sub>a</sub><sup>b</sup> f(x) dx = F(b) - F(a)</code></p>
+    <p>
+        In probability theory, this theorem connects the concepts of <strong>probability density functions (PDFs)</strong> and <strong>cumulative distribution functions (CDFs)</strong>.
+        Specifically, if <code>f(x)</code> is the PDF of a continuous random variable X, then the CDF, <code>F(x)</code>, gives the probability that X is less than or equal to a value x.
+    </p>
+    <p>
+        The relationship between the PDF and CDF is:
+        <p style="text-align: center;"><code>F(x) = ∫<sub>-∞</sub><sup>x</sup> f(t) dt</code></p>
+        Here, <code>F(x)</code> is the area under the curve of <code>f(x)</code> up to x. The Fundamental Theorem of Calculus tells us that the derivative of <code>F(x)</code> with respect to x gives back the PDF:
+    </p>
+    <p style="text-align: center;"><code>F'(x) = f(x)</code></p>
+    <p>
+        In this way, the FTC shows that the CDF <code>F(x)</code> accumulates probability as we move along the x-axis, with the PDF <code>f(x)</code> representing the rate of accumulation.
+    </p>
+
+    <h3>2. Generating Samples from a Discrete Univariate Probability Distribution</h3>
+    <p>
+        In this simulation, we generate samples from a discrete probability distribution, where each possible outcome has an arbitrary probability.
+        For example, a distribution with outcomes [1, 2, 3, 4] and corresponding probabilities [0.1, 0.2, 0.3, 0.4] would mean that outcome 4 has a 40% probability of occurring, outcome 3 has 30%, and so on.
+    </p>
+    <p>
+        As we generate samples, we can visualize the <strong>empirical distribution</strong>—the observed frequency of each outcome. As the sample size increases, the empirical distribution should converge to the theoretical distribution, demonstrating the <strong>law of large numbers</strong>.
+    </p>
+
+    <h3>3. Empirical Mean and Variance Computation Using Recursive Methods</h3>
+    <p>
+        To compute the <strong>mean</strong> and <strong>variance</strong> of the generated samples in an efficient manner, we use recursive methods, specifically Welford's algorithm. 
+        This method allows us to update the mean and variance with each new sample, without needing to store all prior values.
+    </p>
+    <p>
+        Welford's algorithm for updating the mean <code>μ</code> and variance <code>σ²</code> with each new sample x<sub>i</sub> is:
+        <ul>
+            <li>Compute the mean incrementally: <code>μ<sub>i</sub> = μ<sub>i-1</sub> + (x<sub>i</sub> - μ<sub>i-1</sub>) / i</code></li>
+            <li>Update the variance incrementally using: <code>σ² = (Σ(x<sub>i</sub> - μ)²) / (i - 1)</code></li>
+        </ul>
+    </p>
+    <p>
+        Theoretically, the mean and variance of the generated samples should converge to the expected theoretical mean and variance as sample size increases. This convergence demonstrates that our empirical mean and variance are accurate estimates of the distribution’s true parameters.
+    </p>
+</div>
+
+
+<div class="output-section">
+    <canvas id="graphCanvas" width="800" height="500"></canvas>
+    <canvas id="statsCanvas" width="800" height="150"></canvas>
+</div>
 
 <script>
-// Initialize variables for storing parameters and simulation data
-let values, probabilities, numSamples;
-let sampleSize, empiricalMean, m2, empiricalData, theoreticalData, meanData, varianceData;
-let distributionChart, statsChart;
+    const canvas = document.getElementById('graphCanvas');
+    const statsCanvas = document.getElementById('statsCanvas');
+    const ctx = canvas.getContext('2d');
+    const statsCtx = statsCanvas.getContext('2d');
 
-// Function to parse and set user input
-function setUserInput() {
-    values = document.getElementById("values").value.split(',').map(Number);
-    probabilities = document.getElementById("probabilities").value.split(',').map(Number);
-    numSamples = parseInt(document.getElementById("numSamples").value);
-
-    // Check if probabilities sum to 1
-    const sumProbabilities = probabilities.reduce((a, b) => a + b, 0);
-    if (Math.abs(sumProbabilities - 1) > 0.01) {
-        alert("Probabilities must sum to 1.");
-        return false;
+    function createIntervalInputs() {
+        const numIntervals = parseInt(document.getElementById('numIntervals').value);
+        const intervalInputs = document.getElementById('intervalInputs');
+        intervalInputs.innerHTML = '';
+        for (let i = 1; i < numIntervals; i++) {
+            const label = document.createElement('label');
+            label.innerText = `Boundary ${i} (0 to 1):`;
+            const input = document.createElement('input');
+            input.type = 'number';
+            input.id = `P${i}`;
+            input.value = (i / numIntervals).toFixed(2);
+            input.step = "0.01";
+            input.min = "0";
+            input.max = "1";
+            intervalInputs.appendChild(label);
+            intervalInputs.appendChild(input);
+        }
     }
-    return true;
-}
 
-// Function to reset all simulation variables
-function resetSimulation() {
-    sampleSize = 0;
-    empiricalMean = 0;
-    m2 = 0;
-    empiricalData = [];
-    theoreticalData = [];
-    meanData = [];
-    varianceData = [];
-}
+    function startSimulation() {
+        const numSamples = parseInt(document.getElementById('numSamples').value);
+        const numIntervals = parseInt(document.getElementById('numIntervals').value);
 
-// Function to calculate theoretical mean and variance
-function theoreticalStats(values, probabilities) {
-    let mean = 0;
-    let variance = 0;
-    for (let i = 0; i < values.length; i++) {
-        mean += values[i] * probabilities[i];
-    }
-    for (let i = 0; i < values.length; i++) {
-        variance += probabilities[i] * (values[i] - mean) ** 2;
-    }
-    return { mean, variance };
-}
+        let intervals = [0];
+        for (let i = 1; i < numIntervals; i++) {
+            const value = parseFloat(document.getElementById(`P${i}`).value);
+            intervals.push(value);
+        }
+        intervals.push(1);
+        intervals.sort((a, b) => a - b);
 
-// Function to generate a sample from the discrete distribution
-function generateSample() {
-    let rnd = Math.random();
-    let cumulative = 0;
-    for (let i = 0; i < probabilities.length; i++) {
-        cumulative += probabilities[i];
-        if (rnd < cumulative) return values[i];
-    }
-    return values[values.length - 1];
-}
+        const counts = Array(numIntervals).fill(0);
+        let mean = 0;
+        let m2 = 0;
 
-// Function to update mean and variance recursively using Welford's algorithm
-function updateStats(newSample, n, mean, m2) {
-    const delta = newSample - mean;
-    mean += delta / n;
-    m2 += delta * (newSample - mean);
-    const variance = n > 1 ? m2 / (n - 1) : 0;
-    return { mean, m2, variance };
-}
-
-// Initialize charts
-function initializeCharts() {
-    const ctx1 = document.getElementById('distributionChart').getContext('2d');
-    distributionChart = new Chart(ctx1, {
-        type: 'line',
-        data: {
-            datasets: [
-                { label: 'Empirical CDF', data: empiricalData, borderColor: 'blue', fill: false, stepped: true },
-                { label: 'Theoretical CDF', data: theoreticalData, borderColor: 'red', fill: false, borderDash: [5, 5], stepped: true }
-            ]
-        },
-        options: {
-            responsive: true,
-            scales: {
-                x: { type: 'linear', title: { display: true, text: 'Value' } },
-                y: { type: 'linear', title: { display: true, text: 'Cumulative Probability' } },
+        for (let i = 0; i < numSamples; i++) {
+            const rand = Math.random();
+            for (let j = 0; j < numIntervals; j++) {
+                if (rand >= intervals[j] && rand < intervals[j + 1]) {
+                    counts[j]++;
+                    break;
+                }
             }
+            const delta = rand - mean;
+            mean += delta / (i + 1);
+            m2 += delta * (rand - mean);
         }
-    });
+        const variance = m2 / numSamples;
 
-    const ctx2 = document.getElementById('statsChart').getContext('2d');
-    statsChart = new Chart(ctx2, {
-        type: 'line',
-        data: {
-            datasets: [
-                { label: 'Empirical Mean', data: meanData, borderColor: 'blue', fill: false },
-                { label: 'Empirical Variance', data: varianceData, borderColor: 'green', fill: false },
-                { label: 'Theoretical Mean', data: Array(numSamples).fill({ y: theoreticalStats(values, probabilities).mean }), borderColor: 'blue', borderDash: [5, 5], fill: false },
-                { label: 'Theoretical Variance', data: Array(numSamples).fill({ y: theoreticalStats(values, probabilities).variance }), borderColor: 'green', borderDash: [5, 5], fill: false }
-            ]
-        },
-        options: {
-            responsive: true,
-            scales: {
-                x: { type: 'linear', title: { display: true, text: 'Sample Size' } },
-                y: { type: 'linear', title: { display: true, text: 'Value' } },
-            }
-        }
-    });
-}
-
-// Function to update charts
-function updateCharts() {
-    distributionChart.update();
-    statsChart.update();
-}
-
-// Main function to run the simulation
-function runSimulation(numSamples) {
-    for (let i = 1; i <= numSamples; i++) {
-        const sample = generateSample();
-        sampleSize++;
-
-        // Update empirical mean and variance
-        const stats = updateStats(sample, sampleSize, empiricalMean, m2);
-        empiricalMean = stats.mean;
-        m2 = stats.m2;
-
-        meanData.push({ x: sampleSize, y: empiricalMean });
-        varianceData.push({ x: sampleSize, y: stats.variance });
-
-        // Update empirical CDF
-        let cumulativeCount = Array(values.length).fill(0);
-        for (let j = 0; j < sampleSize; j++) {
-            cumulativeCount[values.indexOf(generateSample())]++;
-        }
-        empiricalData.length = 0;
-        let cumulative = 0;
-        for (let j = 0; j < values.length; j++) {
-            cumulative += cumulativeCount[j] / sampleSize;
-            empiricalData.push({ x: values[j], y: cumulative });
-        }
-
-        // Update charts every 50 samples for performance
-        if (i % 50 === 0) updateCharts();
-    }
-    updateCharts();  // Final update after loop completes
-}
-
-// Function to start the simulation based on user input
-function startSimulation() {
-    if (!setUserInput()) return;
-    resetSimulation();
-    initializeCharts();
-
-    // Calculate theoretical CDF
-    let cumulative = 0;
-    theoreticalData.length = 0;
-    for (let i = 0; i < probabilities.length; i++) {
-        cumulative += probabilities[i];
-        theoreticalData.push({ x: values[i], y: cumulative });
+        drawHistogram(counts, intervals);
+        displayStatistics(mean, variance);
     }
 
-    // Run simulation with user-defined sample size
-    runSimulation(numSamples);
-}
+    function drawHistogram(counts, intervals) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        const width = canvas.width - 60;
+        const height = canvas.height - 60;
+        const maxCount = Math.max(...counts);
+
+        ctx.fillStyle = '#007bff';
+        ctx.font = '12px Arial';
+        for (let i = 0; i < counts.length; i++) {
+            const barWidth = width / counts.length - 10;
+            const barHeight = (counts[i] / maxCount) * height;
+            const x = 30 + i * (barWidth + 10);
+            const y = canvas.height - 30 - barHeight;
+
+            ctx.fillRect(x, y, barWidth, barHeight);
+            ctx.fillStyle = 'black';
+            ctx.fillText(`[${intervals[i].toFixed(2)}, ${intervals[i + 1].toFixed(2)})`, x, canvas.height - 15);
+            ctx.fillText(counts[i], x + barWidth / 2 - 10, y - 10);
+            ctx.fillStyle = '#007bff';
+        }
+    }
+
+    function displayStatistics(mean, variance) {
+        statsCtx.clearRect(0, 0, statsCanvas.width, statsCanvas.height);
+
+        statsCtx.font = '16px Arial';
+        statsCtx.fillStyle = 'black';
+        statsCtx.fillText(`Empirical Mean: ${mean.toFixed(4)}`, 10, 30);
+        statsCtx.fillText(`Empirical Variance: ${variance.toFixed(4)}`, 10, 60);
+
+        const theoreticalMean = 0.5;
+        const theoreticalVariance = 1 / 12;
+        statsCtx.fillText(`Theoretical Mean: ${theoreticalMean.toFixed(4)}`, 400, 30);
+        statsCtx.fillText(`Theoretical Variance: ${theoreticalVariance.toFixed(4)}`, 400, 60);
+    }
+
+    createIntervalInputs();
 </script>
+
 </body>
 </html>
