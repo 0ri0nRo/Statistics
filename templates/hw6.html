@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Empirical vs Theoretical Distribution</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+<h1>Empirical vs Theoretical Distribution with Recursive Statistics</h1>
+<canvas id="distributionChart" width="800" height="400"></canvas>
+<canvas id="statsChart" width="800" height="400"></canvas>
+
+<script>
+// Parameters for the discrete distribution
+const probabilities = [0.1, 0.2, 0.3, 0.4];  // Arbitrary probabilities (must sum to 1)
+const values = [1, 2, 3, 4];  // Corresponding discrete values
+
+// Function to calculate the theoretical mean and variance
+function theoreticalStats(values, probabilities) {
+    let mean = 0;
+    let variance = 0;
+    for (let i = 0; i < values.length; i++) {
+        mean += values[i] * probabilities[i];
+    }
+    for (let i = 0; i < values.length; i++) {
+        variance += probabilities[i] * (values[i] - mean) ** 2;
+    }
+    return { mean, variance };
+}
+
+// Generate a sample from the discrete distribution
+function generateSample() {
+    let rnd = Math.random();
+    let cumulative = 0;
+    for (let i = 0; i < probabilities.length; i++) {
+        cumulative += probabilities[i];
+        if (rnd < cumulative) return values[i];
+    }
+    return values[values.length - 1];
+}
+
+// Function to update mean and variance recursively using Welford's algorithm
+function updateStats(newSample, n, mean, m2) {
+    const delta = newSample - mean;
+    mean += delta / n;
+    m2 += delta * (newSample - mean);
+    const variance = n > 1 ? m2 / (n - 1) : 0;
+    return { mean, m2, variance };
+}
+
+// Initializing variables
+let sampleSize = 0;
+let empiricalMean = 0;
+let m2 = 0;
+const empiricalData = [];
+const theoreticalData = [];
+const meanData = [];
+const varianceData = [];
+
+// Calculate theoretical CDF for comparison
+let cumulative = 0;
+for (let i = 0; i < probabilities.length; i++) {
+    cumulative += probabilities[i];
+    theoreticalData.push({ x: values[i], y: cumulative });
+}
+
+// Chart for distribution comparison
+const ctx1 = document.getElementById('distributionChart').getContext('2d');
+const distributionChart = new Chart(ctx1, {
+    type: 'line',
+    data: {
+        datasets: [
+            {
+                label: 'Empirical CDF',
+                data: empiricalData,
+                borderColor: 'blue',
+                fill: false,
+                stepped: true,
+            },
+            {
+                label: 'Theoretical CDF',
+                data: theoreticalData,
+                borderColor: 'red',
+                fill: false,
+                borderDash: [5, 5],
+                stepped: true,
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            x: { type: 'linear', title: { display: true, text: 'Value' } },
+            y: { type: 'linear', title: { display: true, text: 'Cumulative Probability' } },
+        }
+    }
+});
+
+// Chart for mean and variance comparison
+const ctx2 = document.getElementById('statsChart').getContext('2d');
+const statsChart = new Chart(ctx2, {
+    type: 'line',
+    data: {
+        datasets: [
+            {
+                label: 'Empirical Mean',
+                data: meanData,
+                borderColor: 'blue',
+                fill: false,
+            },
+            {
+                label: 'Empirical Variance',
+                data: varianceData,
+                borderColor: 'green',
+                fill: false,
+            },
+            {
+                label: 'Theoretical Mean',
+                data: Array(1000).fill({ y: theoreticalStats(values, probabilities).mean }),
+                borderColor: 'blue',
+                borderDash: [5, 5],
+                fill: false,
+            },
+            {
+                label: 'Theoretical Variance',
+                data: Array(1000).fill({ y: theoreticalStats(values, probabilities).variance }),
+                borderColor: 'green',
+                borderDash: [5, 5],
+                fill: false,
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            x: { type: 'linear', title: { display: true, text: 'Sample Size' } },
+            y: { type: 'linear', title: { display: true, text: 'Value' } },
+        }
+    }
+});
+
+// Function to update charts as samples are generated
+function updateCharts() {
+    distributionChart.update();
+    statsChart.update();
+}
+
+// Generate samples and update stats, CDF, and charts
+function runSimulation(numSamples) {
+    for (let i = 1; i <= numSamples; i++) {
+        const sample = generateSample();
+        sampleSize++;
+
+        // Update empirical mean and variance
+        const stats = updateStats(sample, sampleSize, empiricalMean, m2);
+        empiricalMean = stats.mean;
+        m2 = stats.m2;
+
+        meanData.push({ x: sampleSize, y: empiricalMean });
+        varianceData.push({ x: sampleSize, y: stats.variance });
+
+        // Update empirical CDF
+        let cumulativeCount = Array(values.length).fill(0);
+        for (let j = 0; j < sampleSize; j++) {
+            cumulativeCount[values.indexOf(generateSample())]++;
+        }
+        empiricalData.length = 0;
+        let cumulative = 0;
+        for (let j = 0; j < values.length; j++) {
+            cumulative += cumulativeCount[j] / sampleSize;
+            empiricalData.push({ x: values[j], y: cumulative });
+        }
+        
+        // Update charts every 50 samples for performance
+        if (i % 50 === 0) updateCharts();
+    }
+}
+
+// Run simulation for 1000 samples
+runSimulation(1000);
+</script>
+</body>
+</html>
