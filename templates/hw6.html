@@ -3,20 +3,63 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Empirical vs Theoretical Distribution</title>
+<title>Empirical vs Theoretical Distribution with User-Defined Parameters</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 <h1>Empirical vs Theoretical Distribution with Recursive Statistics</h1>
+
+<!-- Form for user input -->
+<div>
+    <label for="values">Values (comma-separated):</label>
+    <input type="text" id="values" value="1,2,3,4">
+</div>
+<div>
+    <label for="probabilities">Probabilities (comma-separated, must sum to 1):</label>
+    <input type="text" id="probabilities" value="0.1,0.2,0.3,0.4">
+</div>
+<div>
+    <label for="numSamples">Number of Samples:</label>
+    <input type="number" id="numSamples" value="1000">
+</div>
+<button onclick="startSimulation()">Start Simulation</button>
+
 <canvas id="distributionChart" width="800" height="400"></canvas>
 <canvas id="statsChart" width="800" height="400"></canvas>
 
 <script>
-// Parameters for the discrete distribution
-const probabilities = [0.1, 0.2, 0.3, 0.4];  // Arbitrary probabilities (must sum to 1)
-const values = [1, 2, 3, 4];  // Corresponding discrete values
+// Initialize variables for storing parameters and simulation data
+let values, probabilities, numSamples;
+let sampleSize, empiricalMean, m2, empiricalData, theoreticalData, meanData, varianceData;
+let distributionChart, statsChart;
 
-// Function to calculate the theoretical mean and variance
+// Function to parse and set user input
+function setUserInput() {
+    values = document.getElementById("values").value.split(',').map(Number);
+    probabilities = document.getElementById("probabilities").value.split(',').map(Number);
+    numSamples = parseInt(document.getElementById("numSamples").value);
+
+    // Check if probabilities sum to 1
+    const sumProbabilities = probabilities.reduce((a, b) => a + b, 0);
+    if (Math.abs(sumProbabilities - 1) > 0.01) {
+        alert("Probabilities must sum to 1.");
+        return false;
+    }
+    return true;
+}
+
+// Function to reset all simulation variables
+function resetSimulation() {
+    sampleSize = 0;
+    empiricalMean = 0;
+    m2 = 0;
+    empiricalData = [];
+    theoreticalData = [];
+    meanData = [];
+    varianceData = [];
+}
+
+// Function to calculate theoretical mean and variance
 function theoreticalStats(values, probabilities) {
     let mean = 0;
     let variance = 0;
@@ -29,7 +72,7 @@ function theoreticalStats(values, probabilities) {
     return { mean, variance };
 }
 
-// Generate a sample from the discrete distribution
+// Function to generate a sample from the discrete distribution
 function generateSample() {
     let rnd = Math.random();
     let cumulative = 0;
@@ -49,104 +92,54 @@ function updateStats(newSample, n, mean, m2) {
     return { mean, m2, variance };
 }
 
-// Initializing variables
-let sampleSize = 0;
-let empiricalMean = 0;
-let m2 = 0;
-const empiricalData = [];
-const theoreticalData = [];
-const meanData = [];
-const varianceData = [];
+// Initialize charts
+function initializeCharts() {
+    const ctx1 = document.getElementById('distributionChart').getContext('2d');
+    distributionChart = new Chart(ctx1, {
+        type: 'line',
+        data: {
+            datasets: [
+                { label: 'Empirical CDF', data: empiricalData, borderColor: 'blue', fill: false, stepped: true },
+                { label: 'Theoretical CDF', data: theoreticalData, borderColor: 'red', fill: false, borderDash: [5, 5], stepped: true }
+            ]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                x: { type: 'linear', title: { display: true, text: 'Value' } },
+                y: { type: 'linear', title: { display: true, text: 'Cumulative Probability' } },
+            }
+        }
+    });
 
-// Calculate theoretical CDF for comparison
-let cumulative = 0;
-for (let i = 0; i < probabilities.length; i++) {
-    cumulative += probabilities[i];
-    theoreticalData.push({ x: values[i], y: cumulative });
+    const ctx2 = document.getElementById('statsChart').getContext('2d');
+    statsChart = new Chart(ctx2, {
+        type: 'line',
+        data: {
+            datasets: [
+                { label: 'Empirical Mean', data: meanData, borderColor: 'blue', fill: false },
+                { label: 'Empirical Variance', data: varianceData, borderColor: 'green', fill: false },
+                { label: 'Theoretical Mean', data: Array(numSamples).fill({ y: theoreticalStats(values, probabilities).mean }), borderColor: 'blue', borderDash: [5, 5], fill: false },
+                { label: 'Theoretical Variance', data: Array(numSamples).fill({ y: theoreticalStats(values, probabilities).variance }), borderColor: 'green', borderDash: [5, 5], fill: false }
+            ]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                x: { type: 'linear', title: { display: true, text: 'Sample Size' } },
+                y: { type: 'linear', title: { display: true, text: 'Value' } },
+            }
+        }
+    });
 }
 
-// Chart for distribution comparison
-const ctx1 = document.getElementById('distributionChart').getContext('2d');
-const distributionChart = new Chart(ctx1, {
-    type: 'line',
-    data: {
-        datasets: [
-            {
-                label: 'Empirical CDF',
-                data: empiricalData,
-                borderColor: 'blue',
-                fill: false,
-                stepped: true,
-            },
-            {
-                label: 'Theoretical CDF',
-                data: theoreticalData,
-                borderColor: 'red',
-                fill: false,
-                borderDash: [5, 5],
-                stepped: true,
-            }
-        ]
-    },
-    options: {
-        responsive: true,
-        scales: {
-            x: { type: 'linear', title: { display: true, text: 'Value' } },
-            y: { type: 'linear', title: { display: true, text: 'Cumulative Probability' } },
-        }
-    }
-});
-
-// Chart for mean and variance comparison
-const ctx2 = document.getElementById('statsChart').getContext('2d');
-const statsChart = new Chart(ctx2, {
-    type: 'line',
-    data: {
-        datasets: [
-            {
-                label: 'Empirical Mean',
-                data: meanData,
-                borderColor: 'blue',
-                fill: false,
-            },
-            {
-                label: 'Empirical Variance',
-                data: varianceData,
-                borderColor: 'green',
-                fill: false,
-            },
-            {
-                label: 'Theoretical Mean',
-                data: Array(1000).fill({ y: theoreticalStats(values, probabilities).mean }),
-                borderColor: 'blue',
-                borderDash: [5, 5],
-                fill: false,
-            },
-            {
-                label: 'Theoretical Variance',
-                data: Array(1000).fill({ y: theoreticalStats(values, probabilities).variance }),
-                borderColor: 'green',
-                borderDash: [5, 5],
-                fill: false,
-            }
-        ]
-    },
-    options: {
-        responsive: true,
-        scales: {
-            x: { type: 'linear', title: { display: true, text: 'Sample Size' } },
-            y: { type: 'linear', title: { display: true, text: 'Value' } },
-        }
-    }
-});
-
-// Function to update charts as samples are generated
+// Function to update charts
 function updateCharts() {
     distributionChart.update();
     statsChart.update();
 }
 
-// Generate samples and update stats, CDF, and charts
+// Main function to run the simulation
 function runSimulation(numSamples) {
     for (let i = 1; i <= numSamples; i++) {
         const sample = generateSample();
@@ -171,14 +164,30 @@ function runSimulation(numSamples) {
             cumulative += cumulativeCount[j] / sampleSize;
             empiricalData.push({ x: values[j], y: cumulative });
         }
-        
+
         // Update charts every 50 samples for performance
         if (i % 50 === 0) updateCharts();
     }
+    updateCharts();  // Final update after loop completes
 }
 
-// Run simulation for 1000 samples
-runSimulation(1000);
+// Function to start the simulation based on user input
+function startSimulation() {
+    if (!setUserInput()) return;
+    resetSimulation();
+    initializeCharts();
+
+    // Calculate theoretical CDF
+    let cumulative = 0;
+    theoreticalData.length = 0;
+    for (let i = 0; i < probabilities.length; i++) {
+        cumulative += probabilities[i];
+        theoreticalData.push({ x: values[i], y: cumulative });
+    }
+
+    // Run simulation with user-defined sample size
+    runSimulation(numSamples);
+}
 </script>
 </body>
 </html>
