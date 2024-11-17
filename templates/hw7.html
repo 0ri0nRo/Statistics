@@ -1,152 +1,206 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Distributions and Sampling Visualization</title>
-<style>
-    body {
-        font-family: 'Arial', sans-serif;
-        background-color: #f0f8ff;
-        margin: 0;
-        padding: 20px;
-        color: #333;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-    }
-    h1, h2 {
-        color: #004d99;
-        margin-bottom: 10px;
-    }
-    h1 { font-size: 2em; }
-    h2 { font-size: 1.5em; }
-    .controls {
-        background: #e0f7fa;
-        padding: 15px;
-        border-radius: 8px;
-        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
-        width: 70%;
-        margin-bottom: 20px;
-        text-align: left;
-    }
-    .controls label, .controls p {
-        font-size: 1em;
-        color: #333;
-    }
-    .controls label {
-        font-weight: bold;
-        margin-top: 10px;
-    }
-    .controls input, .controls select {
-        padding: 8px;
-        margin: 5px 0;
-        border: 1px solid #004d99;
-        border-radius: 4px;
-        font-size: 16px;
-    }
-    button {
-        padding: 10px 20px;
-        background-color: #007bff;
-        color: white;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 16px;
-        margin-top: 15px;
-        transition: background-color 0.3s;
-    }
-    button:hover { background-color: #0056b3; }
-    canvas {
-        border: 1px solid #ccc;
-        background-color: white;
-        margin-top: 20px;
-    }
-    .output-section {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        width: 70%;
-    }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sampling Averages and Cryptographic Analysis</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .container {
+            max-width: 900px;
+            margin: 20px auto;
+            background: #ffffff;
+            padding: 25px 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        h1, h2, h3 {
+            color: #34495e;
+            margin-bottom: 10px;
+        }
+        p {
+            font-size: 1rem;
+            color: #555;
+            line-height: 1.6;
+        }
+        .controls {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .controls label {
+            font-size: 16px;
+            margin-bottom: 5px;
+        }
+        .controls input {
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        .controls button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+        .controls button:hover {
+            background-color: #0056b3;
+        }
+        canvas {
+            border: 1px solid #ccc;
+            margin: 20px 0;
+        }
+        .statistics {
+            text-align: left;
+            font-size: 1rem;
+            margin-top: 20px;
+        }
+    </style>
 </head>
 <body>
 
-<h1>Distribution and Sampling Visualization</h1>
+<div class="container">
+    <h1>Sampling Averages and Cryptographic Analysis</h1>
+    <h2>Setup</h2>
+    <p>This tool simulates sampling averages from a parent distribution and analyzes the resulting distributions. It also computes cryptographic properties of modular arithmetic with \( Y = g^U \mod n \).</p>
 
-<div class="controls">
     <h2>Parameters</h2>
-    <label for="n">Modulo (n):</label>
-    <input type="number" id="n" value="19" min="2">
-    <label for="g">Base (g):</label>
-    <input type="number" id="g" value="2" min="1">
-    <label for="maxU">Maximum U:</label>
-    <input type="number" id="maxU" value="100" min="1">
-    <label for="samples">Number of Samples:</label>
-    <input type="number" id="samples" value="1000" min="100" max="10000">
-    <button onclick="generateDistribution()">Generate Distribution</button>
-</div>
+    <div class="controls">
+        <label for="parentMean">Parent Distribution Mean:</label>
+        <input type="number" id="parentMean" value="0.5" step="0.1" min="0" max="1">
 
-<div class="output-section">
-    <canvas id="distributionCanvas" width="800" height="500"></canvas>
+        <label for="parentVariance">Parent Distribution Variance:</label>
+        <input type="number" id="parentVariance" value="0.0833" step="0.001" min="0" max="1">
+
+        <label for="sampleSize">Sample Size (n):</label>
+        <input type="number" id="sampleSize" value="30" min="1">
+
+        <label for="numSamples">Number of Samples (m):</label>
+        <input type="number" id="numSamples" value="1000" min="1">
+
+        <label for="modulo">Modulo (n):</label>
+        <input type="number" id="modulo" value="19" min="2">
+
+        <label for="base">Base (g):</label>
+        <input type="number" id="base" value="2" min="1">
+
+        <label for="maxU">Maximum U:</label>
+        <input type="number" id="maxU" value="100" min="1">
+
+        <button onclick="simulate()">Simulate</button>
+    </div>
+
+    <canvas id="samplingCanvas" width="800" height="400"></canvas>
+    <canvas id="modularCanvas" width="800" height="400"></canvas>
+
+    <div class="statistics">
+        <h3>Statistics</h3>
+        <p id="samplingStats">Sampling Statistics will appear here.</p>
+        <p id="modularStats">Modular Statistics will appear here.</p>
+    </div>
 </div>
 
 <script>
-    const canvas = document.getElementById('distributionCanvas');
-    const ctx = canvas.getContext('2d');
+    const samplingCanvas = document.getElementById('samplingCanvas');
+    const modularCanvas = document.getElementById('modularCanvas');
+    const samplingCtx = samplingCanvas.getContext('2d');
+    const modularCtx = modularCanvas.getContext('2d');
 
-    function generateDistribution() {
-        // Parameters
-        const n = parseInt(document.getElementById('n').value);
-        const g = parseInt(document.getElementById('g').value);
+    function simulate() {
+        // Read parameters
+        const parentMean = parseFloat(document.getElementById('parentMean').value);
+        const parentVariance = parseFloat(document.getElementById('parentVariance').value);
+        const sampleSize = parseInt(document.getElementById('sampleSize').value);
+        const numSamples = parseInt(document.getElementById('numSamples').value);
+        const modulo = parseInt(document.getElementById('modulo').value);
+        const base = parseInt(document.getElementById('base').value);
         const maxU = parseInt(document.getElementById('maxU').value);
-        const samples = parseInt(document.getElementById('samples').value);
 
-        // Generate Y = g^U % n
-        const U = Array.from({ length: samples }, () => Math.floor(Math.random() * maxU) + 1);
-        const Y = U.map(u => Math.pow(g, u) % n);
-
-        // Frequency distribution
-        const frequencies = Array(n).fill(0);
-        Y.forEach(value => frequencies[value]++);
-
-        // Normalize frequencies for visualization
-        const maxFreq = Math.max(...frequencies);
-        const barWidth = (canvas.width - 60) / n;
-
-        // Clear canvas and draw
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = '#007bff';
-        ctx.font = '14px Arial';
-        for (let i = 0; i < n; i++) {
-            const barHeight = (frequencies[i] / maxFreq) * (canvas.height - 60);
-            const x = 30 + i * barWidth;
-            const y = canvas.height - 30 - barHeight;
-
-            // Draw bars
-            ctx.fillRect(x, y, barWidth - 5, barHeight);
-
-            // Labels
-            ctx.fillStyle = 'black';
-            ctx.fillText(i, x + barWidth / 2 - 5, canvas.height - 10);
-            ctx.fillText(frequencies[i], x + barWidth / 2 - 10, y - 10);
-            ctx.fillStyle = '#007bff';
+        // Simulate sampling
+        const sampleMeans = [];
+        for (let i = 0; i < numSamples; i++) {
+            let sample = Array.from({ length: sampleSize }, () =>
+                parentMean + Math.sqrt(parentVariance) * (Math.random() - 0.5) * 2
+            );
+            const mean = sample.reduce((sum, val) => sum + val, 0) / sampleSize;
+            sampleMeans.push(mean);
         }
 
-        // Draw axis
-        ctx.beginPath();
-        ctx.moveTo(30, canvas.height - 30);
-        ctx.lineTo(canvas.width - 30, canvas.height - 30);
-        ctx.stroke();
+        // Calculate statistics for sampling
+        const samplingMean = sampleMeans.reduce((sum, val) => sum + val, 0) / numSamples;
+        const samplingVariance =
+            sampleMeans.reduce((sum, val) => sum + Math.pow(val - samplingMean, 2), 0) / numSamples;
 
-        ctx.beginPath();
-        ctx.moveTo(30, canvas.height - 30);
-        ctx.lineTo(30, 30);
-        ctx.stroke();
+        // Visualize sampling averages
+        visualizeHistogram(samplingCtx, samplingCanvas, sampleMeans, "Sampling Averages");
+
+        // Simulate modular arithmetic
+        const U = Array.from({ length: numSamples }, () => Math.floor(Math.random() * maxU) + 1);
+        const modularResults = U.map(u => Math.pow(base, u) % modulo);
+
+        // Calculate modular statistics
+        const modularEntropy = calculateEntropy(modularResults, modulo);
+
+        // Visualize modular distribution
+        visualizeHistogram(modularCtx, modularCanvas, modularResults, "Modular Distribution");
+
+        // Display statistics
+        document.getElementById('samplingStats').textContent = `Sampling Mean: ${samplingMean.toFixed(
+            4
+        )}, Sampling Variance: ${samplingVariance.toFixed(4)}`;
+        document.getElementById(
+            'modularStats'
+        ).textContent = `Modular Entropy: ${modularEntropy.toFixed(4)}`;
     }
 
-    // Initialize with default values
-    generateDistribution();
+    function visualizeHistogram(ctx, canvas, data, title) {
+        const counts = {};
+        data.forEach(value => {
+            counts[value] = (counts[value] || 0) + 1;
+        });
+
+        const keys = Object.keys(counts).map(Number).sort((a, b) => a - b);
+        const maxCount = Math.max(...Object.values(counts));
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#007bff';
+
+        const barWidth = canvas.width / keys.length;
+
+        keys.forEach((key, index) => {
+            const height = (counts[key] / maxCount) * canvas.height;
+            ctx.fillRect(index * barWidth, canvas.height - height, barWidth - 1, height);
+        });
+
+        ctx.font = '16px Arial';
+        ctx.fillStyle = '#000';
+        ctx.fillText(title, canvas.width / 2 - 50, 20);
+    }
+
+    function calculateEntropy(data, modulo) {
+        const counts = Array(modulo).fill(0);
+        data.forEach(value => {
+            counts[value]++;
+        });
+
+        const probabilities = counts.map(count => count / data.length);
+        return -probabilities.reduce((sum, p) => (p > 0 ? sum + p * Math.log2(p) : sum), 0);
+    }
 </script>
 
 </body>
