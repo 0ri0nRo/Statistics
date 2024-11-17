@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<!-- saved from url=(0045)https://luc-hub.github.io/Stat-HW8/HW7-8.html -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Probability Interval Histogram</title>
+    <script src="./Probability Interval Histogram_files/d3.v7.min.js"></script>
+    <style>
+        .controls {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        label {
+            font-size: 18px;
+            color: #555;
+            margin-right: 2px;
+            margin-left: 7px;
+        }
+        input[type="number"] {
+            padding: 8px;
+            margin: 0 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+            width: 80px;
+            margin-bottom: 10px;
+            margin-top: 5px;
+        }
+        button {
+            padding: 8px 16px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+            margin-top: 20px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        canvas {
+            border: 1px solid #ccc;
+            background-color: white;
+            margin-top: 30px;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .subsets-label {
+            margin-top: 40px;
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+        }
+        #subCanvasContainer {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            margin-top: 30px;
+        }
+        .subset-canvas {
+            margin-bottom: 20px; /* Add space between subset canvases */
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+
+       body {
+            font-family: 'Georgia', serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background: #f9f9f9;
+            color: #333;
+
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            height: 100vh;
+        
+        }
+        .container {
+            max-width: 900px;
+            margin: 20px auto;
+            background: #ffffff;
+            padding: 25px 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        h1, h2, h3 {
+            color: #34495e;
+            margin-bottom: 10px;
+        }
+        h1 {
+            font-size: 2.4rem;
+            text-align: center;
+            margin-bottom: 40px;
+            border-bottom: 3px solid #34495e;
+            padding-bottom: 10px;
+        }
+        p {
+            margin: 20px 0;
+            font-size: 1.1rem;
+        }
+        ul, ol {
+            margin: 20px 0;
+            padding-left: 30px;
+        }
+        ul li, ol li {
+            margin-bottom: 12px;
+            font-size: 1.1rem;
+        }
+        code {
+            font-family: 'Courier New', monospace;
+            background-color: #f4f6f9;
+            padding: 5px 10px;
+            border-radius: 5px;
+        }
+        .formula {
+            display: block;
+            background: #f4f6f9;
+            padding: 8px 15px;
+            border-radius: 5px;
+            font-size: 1.1rem;
+            font-family: 'Courier New', monospace;
+            margin: 15px 0;
+            text-align: center;
+            border: 1px solid #ddd;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background-color: #34495e;
+            color: #ffffff;
+            font-size: 1.1rem;
+        }
+        tr:nth-child(even) {
+            background: #f4f6f9;
+        }
+        .highlight {
+            background: #fef9e7;
+            padding: 12px 18px;
+            margin: 20px 0;
+            border-left: 5px solid #f1c40f;
+            font-size: 1.1rem;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+
+        .chart-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: flex-start;
+            margin-bottom: 30px;
+        }
+        .chart-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 10px;
+        }
+        .chart-wrapper h3 {
+            margin: 10px 0 5px 0;
+            text-align: right;
+        }
+        .content {
+            max-width: 800px;
+            margin: auto;
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+        }
+        svg {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+<h2>Probability Interval Histogram</h2>
+
+<div class="controls">
+    <label for="numPoints">Number of Draws (n):</label>
+    <input type="number" id="numPoints" value="100" min="1" max="1000">
+   
+    <label for="numSubsets">Number of Subsets:</label>
+    <input type="number" id="numSubsets" value="4" min="2" step="2" onchange="validateEvenSubsets()">
+    
+    <label for="numIntervals">Number of Intervals:</label>
+    <input type="number" id="numIntervals" value="5" min="1" max="10" onchange="createIntervalInputs()">
+    <div id="intervalInputs"><label>Interval Boundary 1 (0 to 1):</label><input type="number" id="P1" step="0.01" min="0" max="1"><label>Interval Boundary 2 (0 to 1):</label><input type="number" id="P2" step="0.01" min="0" max="1"><label>Interval Boundary 3 (0 to 1):</label><input type="number" id="P3" step="0.01" min="0" max="1"><label>Interval Boundary 4 (0 to 1):</label><input type="number" id="P4" step="0.01" min="0" max="1"></div>
+</div>
+
+<button onclick="simulate()">Simulate</button>
+
+<canvas id="mainCanvas" width="1100" height="900"></canvas>
+<div class="subsets-label">Subsets:</div>
+<div id="subCanvasContainer"><canvas width="1100" height="300" class="subset-canvas"></canvas><canvas width="1100" height="300" class="subset-canvas"></canvas><canvas width="1100" height="300" class="subset-canvas"></canvas><canvas width="1100" height="300" class="subset-canvas"></canvas></div>
+<div id="statistics" style="margin-top: 30px;"><p style="font-size: 32px; font-weight: bold;">Average Mean of Subsets: 0.5048</p>
+                              <p style="font-size: 32px; font-weight: bold;">Average Variance of Subsets: 0.0622</p>
+                              <p style="font-size: 32px; font-weight: bold;">Variance of Means: 0.0067</p>
+                              <p style="font-size: 32px; font-weight: bold;">Variance of Variances: 0.0001</p></div>
+
+<script>
+    const mainCanvas = document.getElementById('mainCanvas');
+    const mainCtx = mainCanvas.getContext('2d');
+    const margin = 60;
+
+    function validateEvenSubsets() {
+        let numSubsets = parseInt(document.getElementById('numSubsets').value);
+
+        // If the number of subsets is odd, make it the next even number
+        if (numSubsets % 2 !== 0) {
+            numSubsets += 1;
+            document.getElementById('numSubsets').value = numSubsets;
+        }
+    }
+
+
+    function createIntervalInputs() {
+        const numIntervals = parseInt(document.getElementById('numIntervals').value);
+        const intervalInputs = document.getElementById('intervalInputs');
+        intervalInputs.innerHTML = '';
+
+        for (let i = 0; i < numIntervals - 1; i++) {
+            const label = document.createElement('label');
+            label.innerText = `Interval Boundary ${i + 1} (0 to 1):`;
+            const input = document.createElement('input');
+            input.type = 'number';
+            input.id = `P${i + 1}`;
+            input.value = (i + 1) / numIntervals;
+            input.step = "0.01";
+            input.min = "0";
+            input.max = "1";
+            intervalInputs.appendChild(label);
+            intervalInputs.appendChild(input);
+        }
+    }
+
+    function drawAxes(ctx, width, height) {
+        ctx.clearRect(0, 0, width, height);
+
+        ctx.strokeStyle = 'black';
+        ctx.lineWidth = 2;
+
+        // X-axis
+        ctx.beginPath();
+        ctx.moveTo(margin, height - margin - 100);
+        ctx.lineTo(width - margin, height - margin - 100);
+        ctx.stroke();
+
+        // Y-axis
+        ctx.beginPath();
+        ctx.moveTo(margin, margin);
+        ctx.lineTo(margin, height - margin - 100);
+        ctx.stroke();
+
+        ctx.font = '18px Arial';
+        ctx.fillStyle = 'black';
+        ctx.fillText('Probability', width / 2 - 110, height - 100);
+        ctx.save();
+        ctx.translate(20, height / 2 - 50);
+        ctx.rotate(-Math.PI / 2);
+        ctx.fillText('Occurrences', -50, 25);
+        ctx.restore();
+    }
+
+    function simulate() {
+        const numPoints = parseInt(document.getElementById('numPoints').value);
+        const numIntervals = parseInt(document.getElementById('numIntervals').value);
+        const numSubsets = parseInt(document.getElementById('numSubsets').value);
+
+        const intervals = [0];
+        for (let i = 0; i < numIntervals - 1; i++) {
+            const value = parseFloat(document.getElementById(`P${i + 1}`).value);
+            intervals.push(value);
+        }
+        intervals.push(1);
+        intervals.sort((a, b) => a - b);
+
+        const allDraws = [];
+        const subsetSize = Math.floor(numPoints / numSubsets);
+        const subsetCounts = Array.from({ length: numSubsets }, () => new Array(numIntervals).fill(0));
+        const counts = new Array(numIntervals).fill(0);
+
+        // Random number generation and distribution
+        for (let i = 0; i < numPoints; i++) {
+            const rand = Math.random();
+            allDraws.push(rand);
+            for (let j = 0; j < numIntervals; j++) {
+                if (rand >= intervals[j] && rand < intervals[j + 1]) {
+                    counts[j]++;
+                    const subsetIndex = Math.floor(i / subsetSize);
+                    if (subsetIndex < numSubsets) {
+                        subsetCounts[subsetIndex][j]++;
+                    }
+                    break;
+                }
+            }
+        }
+
+        drawAxes(mainCtx, mainCanvas.width, mainCanvas.height);
+        drawHistogram(mainCtx, mainCanvas, counts, intervals);
+        displayStatistics(mainCtx, mainCanvas, allDraws);
+
+        createSubCanvas(allDraws, subsetCounts, intervals, numPoints, numSubsets, subsetSize);
+    }
+
+    function drawHistogram(ctx, canvas, counts, intervals) {
+        const width = canvas.width - 2 * margin;
+        const height = canvas.height - 2 * margin - 100;
+        const maxCount = Math.max(...counts);
+
+        ctx.fillStyle = 'blue';
+        for (let i = 0; i < counts.length; i++) {
+            const barWidth = width / counts.length;
+            const barHeight = (counts[i] / maxCount) * height;
+
+            const x = margin + i * barWidth;
+            const y = canvas.height - margin - barHeight - 100;
+
+            ctx.fillRect(x, y, barWidth - 5, barHeight);
+            ctx.fillStyle = 'black';
+            ctx.fillText(`[${intervals[i].toFixed(2)}, ${intervals[i + 1].toFixed(2)})`, x, canvas.height - margin + 20 - 100);
+            ctx.fillText(counts[i], x + barWidth / 2 - 10, y - 10);
+            ctx.fillStyle = 'blue';
+        }
+    }
+
+    function displayStatistics(ctx, canvas, draws) {
+        const mean = draws.reduce((acc, val) => acc + val, 0) / draws.length;
+        const variance = draws.reduce((acc, val) => acc + Math.pow(val - mean, 2), 0) / draws.length;
+        const theoreticalMean = 0.5;
+        const theoreticalVariance = 1 / 12;
+
+        ctx.font = '16px Arial';
+        ctx.fillStyle = 'black';
+
+        ctx.fillText(`Calculated Mean: ${mean.toFixed(4)}`, margin, canvas.height - 40);
+        ctx.fillText(`Calculated Variance: ${variance.toFixed(4)}`, margin, canvas.height - 20);
+        ctx.fillText(`Theoretical Mean: ${theoreticalMean.toFixed(4)}`, canvas.width / 2, canvas.height - 40);
+        ctx.fillText(`Theoretical Variance: ${theoreticalVariance.toFixed(4)}`, canvas.width / 2, canvas.height - 20);
+    }
+
+    function createSubCanvas(allDraws, subsetCounts, intervals, numPoints, numSubsets, subsetSize) {
+        const subCanvasContainer = document.getElementById('subCanvasContainer');
+        subCanvasContainer.innerHTML = ''; // Clear previous subsets
+        let meanSum = 0;
+        let varianceSum = 0;
+        let meanSquares = 0;
+        let varianceSquares = 0;
+
+        const subsetMeans = [];
+        const subsetVariances = [];
+
+        for (let i = 0; i < numSubsets; i++) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 1100;
+            canvas.height = 300;
+            const ctx = canvas.getContext('2d');
+            drawAxes(ctx, canvas.width, canvas.height);
+            drawHistogram(ctx, canvas, subsetCounts[i], intervals);
+
+            const subsetStart = i * subsetSize;
+            const subsetEnd = subsetStart + subsetSize;
+            const subsetDraws = allDraws.slice(subsetStart, subsetEnd);
+
+            displayStatistics(ctx, canvas, subsetDraws);
+
+            // Calculate the mean and variance for the current subset
+            const subsetMean = subsetDraws.reduce((acc, val) => acc + val, 0) / subsetDraws.length;
+            const subsetVariance = subsetDraws.reduce((acc, val) => acc + Math.pow(val - subsetMean, 2), 0) / subsetDraws.length;
+            subsetMeans.push(subsetMean);
+            subsetVariances.push(subsetVariance);
+
+            meanSum += subsetMean;
+            varianceSum += subsetVariance;
+
+            canvas.classList.add('subset-canvas');
+            subCanvasContainer.appendChild(canvas);
+        }
+
+        // Calculate and display the average mean and average variance
+        const avgMean = meanSum / numSubsets;
+        const avgVariance = varianceSum / numSubsets;
+
+        // Variance of means
+        const meanVariance = subsetMeans.reduce((acc, val) => acc + Math.pow(val - avgMean, 2), 0) / numSubsets;
+
+        // Variance of variances
+        const varianceVariance = subsetVariances.reduce((acc, val) => acc + Math.pow(val - avgVariance, 2), 0) / numSubsets;
+
+        const statsDiv = document.getElementById('statistics');
+        statsDiv.innerHTML = `<p style="font-size: 32px; font-weight: bold;">Average Mean of Subsets: ${avgMean.toFixed(4)}</p>
+                              <p style="font-size: 32px; font-weight: bold;">Average Variance of Subsets: ${avgVariance.toFixed(4)}</p>
+                              <p style="font-size: 32px; font-weight: bold;">Variance of Means: ${meanVariance.toFixed(4)}</p>
+                              <p style="font-size: 32px; font-weight: bold;">Variance of Variances: ${varianceVariance.toFixed(4)}</p>`;
+    }
+
+    createIntervalInputs();
+</script>
+
+</body></html>
