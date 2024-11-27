@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cryptography Exercise</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f9f9f9;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+
+        section {
+            margin-bottom: 20px;
+        }
+
+        textarea, input {
+            width: 100%;
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            background: #007BFF;
+            color: #fff;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px 0;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        canvas {
+            width: 100%;
+            height: 300px;
+            margin-top: 20px;
+        }
+
+        #entropyResult {
+            font-weight: bold;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Cryptography Homework</h1>
+
+        <section id="part1">
+            <h2>Part 1: Caesar Cipher</h2>
+            <textarea id="inputText" placeholder="Enter your text here..." rows="5"></textarea>
+            <input type="number" id="shiftValue" placeholder="Shift Value (1-25)" min="1" max="25">
+            <button id="encryptBtn">Encrypt</button>
+            <button id="decryptBtn">Decrypt</button>
+            <h3>Result:</h3>
+            <textarea id="outputText" readonly rows="5"></textarea>
+        </section>
+
+        <section id="part2">
+            <h2>Part 2: Modular Exponentiation</h2>
+            <textarea id="modText" placeholder="Enter text for modular encoding..." rows="5"></textarea>
+            <input type="number" id="modExponent" placeholder="Exponent (e)" min="1">
+            <input type="number" id="modModulus" placeholder="Modulus (P)" min="1">
+            <button id="modEncryptBtn">Encode</button>
+            <button id="modDecodeBtn">Decode</button>
+            <h3>Result:</h3>
+            <textarea id="modOutputText" readonly rows="5"></textarea>
+        </section>
+
+        <section id="analysis">
+            <h2>Analysis</h2>
+            <button id="analyzeBtn">Analyze Frequency & Entropy</button>
+            <canvas id="frequencyChart"></canvas>
+            <p id="entropyResult"></p>
+        </section>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Part 1: Caesar Cipher
+        document.getElementById('encryptBtn').addEventListener('click', () => {
+            const text = document.getElementById('inputText').value;
+            const shift = parseInt(document.getElementById('shiftValue').value);
+            document.getElementById('outputText').value = caesarShift(text, shift);
+        });
+
+        document.getElementById('decryptBtn').addEventListener('click', () => {
+            const text = document.getElementById('inputText').value;
+            const shift = -parseInt(document.getElementById('shiftValue').value);
+            document.getElementById('outputText').value = caesarShift(text, shift);
+        });
+
+        function caesarShift(input, shift) {
+            let result = '';
+            for (let ch of input) {
+                if (/[A-Z]/.test(ch)) {
+                    let offset = 'A'.charCodeAt(0);
+                    result += String.fromCharCode(((ch.charCodeAt(0) - offset + shift + 26) % 26) + offset);
+                } else if (/[a-z]/.test(ch)) {
+                    let offset = 'a'.charCodeAt(0);
+                    result += String.fromCharCode(((ch.charCodeAt(0) - offset + shift + 26) % 26) + offset);
+                } else {
+                    result += ch;
+                }
+            }
+            return result;
+        }
+
+        // Part 2: Modular Exponentiation
+        document.getElementById('modEncryptBtn').addEventListener('click', () => {
+            const text = document.getElementById('modText').value.toUpperCase();
+            const e = parseInt(document.getElementById('modExponent').value);
+            const P = parseInt(document.getElementById('modModulus').value);
+
+            const numericValues = Array.from(text).map(char => {
+                return char >= 'A' && char <= 'Z' ? char.charCodeAt(0) - 'A'.charCodeAt(0) : char;
+            });
+
+            const encodedValues = numericValues.map(num => {
+                return typeof num === 'number' ? Math.pow(num, e) % P : num;
+            });
+
+            document.getElementById('modOutputText').value = encodedValues.join(' ');
+        });
+
+        // Frequency Analysis and Shannon Entropy
+        document.getElementById('analyzeBtn').addEventListener('click', () => {
+            const text = document.getElementById('inputText').value.toUpperCase();
+            const frequency = {};
+            const total = text.length;
+
+            for (let char of text) {
+                if (/[A-Z]/.test(char)) {
+                    frequency[char] = (frequency[char] || 0) + 1;
+                }
+            }
+
+            let entropy = 0;
+            for (let key in frequency) {
+                const p = frequency[key] / total;
+                entropy -= p * Math.log2(p);
+            }
+
+            document.getElementById('entropyResult').innerText = `Shannon Entropy: ${entropy.toFixed(4)}`;
+
+            const ctx = document.getElementById('frequencyChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(frequency),
+                    datasets: [{
+                        label: 'Frequency',
+                        data: Object.values(frequency),
+                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
