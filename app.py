@@ -42,6 +42,10 @@ def hw8():
 def hw9():
     return render_template('hw9.html')
 
+@app.route('/hw10')
+def hw10():
+    return render_template('hw10.html')
+
 @app.errorhandler(404)
 def page_not_found(e):
     return render_template('404.html'), 404
